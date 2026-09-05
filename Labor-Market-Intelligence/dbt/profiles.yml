@@ -1,0 +1,12 @@
+labor_market_intelligence:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: "{{ env_var('DUCKDB_PATH', '../labor_market.duckdb') }}"
+      threads: 4
+    prod:
+      type: duckdb
+      path: "md:labor_market"
+      token: "{{ env_var('MotherDuck_token', '') }}"
+      threads: 4

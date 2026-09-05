@@ -1,0 +1,42 @@
+version: 2
+
+models:
+  - name: dim_technology
+    description: "Technology dimension — one row per canonical technology"
+    columns:
+      - name: tech_id
+        tests:
+          - not_null
+          - unique
+      - name: canonical_name
+        tests:
+          - not_null
+          - unique
+      - name: github_slug
+        tests:
+          - not_null
+
+  - name: fct_skill_signals
+    description: "Skill demand + ecosystem signals fact table"
+    columns:
+      - name: signal_id
+        tests:
+          - not_null
+          - unique
+      - name: tech_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_technology')
+              field: tech_id
+      - name: signal_week
+        tests:
+          - not_null
+      - name: weekly_job_count
+        tests:
+          - not_null
+      - name: composite_signal
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['thriving', 'demand_led', 'hype_led', 'weak']
