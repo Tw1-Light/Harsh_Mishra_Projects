@@ -1,0 +1,44 @@
+version: 2
+
+sources:
+  - name: raw_stackoverflow
+    description: "Stack Overflow Developer Survey 2024 — filtered parquet"
+    tables:
+      - name: survey
+        description: "One row per respondent. Tech columns are semicolon-delimited multi-values."
+        meta:
+          raw_path: "{{ env_var('PROJECT_ROOT', '..') }}/raw/stackoverflow/filtered_survey.parquet"
+
+  - name: raw_adzuna
+    description: "Adzuna India tech job postings"
+    tables:
+      - name: jobs
+        description: "One row per job posting. Technologies column is comma-delimited matched keywords."
+        meta:
+          raw_path: "{{ env_var('PROJECT_ROOT', '..') }}/raw/adzuna/adzuna_extracted.csv"
+
+  - name: raw_github
+    description: "GitHub ecosystem snapshots — repository-level records"
+    tables:
+      - name: repos
+        description: >
+          One row per repo per technology per snapshot date.
+          Includes quality classification and relevance scores.
+        meta:
+          raw_path: "{{ env_var('PROJECT_ROOT', '..') }}/raw/github/*/repos/*.json"
+      - name: snapshots
+        description: "One row per technology per snapshot date — aggregated ecosystem metrics."
+        meta:
+          raw_path: "{{ env_var('PROJECT_ROOT', '..') }}/raw/github/*/snapshots/*.json"
+
+  - name: raw_config
+    description: "Static config tables"
+    tables:
+      - name: tech_dimension
+        description: "Crosswalk: SO Survey name → GitHub topic → Adzuna keyword"
+        meta:
+          raw_path: "{{ env_var('PROJECT_ROOT', '..') }}/raw/tech_dimension_table.json"
+      - name: emerging_tech
+        description: "Emerging technologies not in SO Survey"
+        meta:
+          raw_path: "{{ env_var('PROJECT_ROOT', '..') }}/raw/emerging_tech.json"

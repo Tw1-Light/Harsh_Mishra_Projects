@@ -1,5 +1,45 @@
+# Secrets
 .env
+
+# DuckDB databases
 *.duckdb
+*.duckdb.wal
+
+# Python
 .venv/
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+.Python
+
+# Raw data (too large / sensitive for git)
+raw/stackoverflow/survey_result.csv
+raw/stackoverflow/filtered_survey.parquet
+raw/adzuna/output.json
+raw/adzuna/adzuna_extracted.csv
+raw/adzuna/*.json
+raw/github/*/repos/
+raw/github/*/snapshots/
+raw/github/*_manifest.json
+raw/github/all_repos.parquet
+raw/github/all_snapshots.parquet
+
+# dbt
+dbt/target/
+dbt/logs/
+dbt/dbt_packages/
+dbt/.user.yml
+
+# Dagster
+$DAGSTER_HOME/
+dagster-daemon.pid
+storage/
+logs/
+
+# Streamlit
+.streamlit/secrets.toml
+
+# OS
+.DS_Store
+Thumbs.db

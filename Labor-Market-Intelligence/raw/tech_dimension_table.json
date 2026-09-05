@@ -1,0 +1,848 @@
+[
+    {
+        "index": 1,
+        "StackOverflow": "APT",
+        "Adzuna": "APT",
+        "Github_Topic": "apt"
+    },
+    {
+        "index": 2,
+        "StackOverflow": "ASP.NET",
+        "Adzuna": "ASP.NET",
+        "Github_Topic": "aspnet"
+    },
+    {
+        "index": 3,
+        "StackOverflow": "ASP.NET Core",
+        "Adzuna": "ASP.NET CORE",
+        "Github_Topic": "aspnet-core"
+    },
+    {
+        "index": 4,
+        "StackOverflow": "Ada",
+        "Adzuna": "ADA",
+        "Github_Topic": "ada"
+    },
+    {
+        "index": 5,
+        "StackOverflow": "Amazon Redshift",
+        "Adzuna": "AMAZON REDSHIFT",
+        "Github_Topic": "amazon-redshift"
+    },
+    {
+        "index": 6,
+        "StackOverflow": "Amazon Web Services (AWS)",
+        "Adzuna": "AMAZON WEB SERVICES (AWS)",
+        "Github_Topic": "aws"
+    },
+    {
+        "index": 7,
+        "StackOverflow": "Angular",
+        "Adzuna": "ANGULAR",
+        "Github_Topic": "angular"
+    },
+    {
+        "index": 8,
+        "StackOverflow": "AngularJS",
+        "Adzuna": "ANGULARJS",
+        "Github_Topic": "angularjs"
+    },
+    {
+        "index": 9,
+        "StackOverflow": "Ansible",
+        "Adzuna": "ANSIBLE",
+        "Github_Topic": "ansible"
+    },
+    {
+        "index": 10,
+        "StackOverflow": "Assembly",
+        "Adzuna": "ASSEMBLY",
+        "Github_Topic": "assembly"
+    },
+    {
+        "index": 11,
+        "StackOverflow": "Astro",
+        "Adzuna": "ASTRO",
+        "Github_Topic": "astro"
+    },
+    {
+        "index": 12,
+        "StackOverflow": "Axum",
+        "Adzuna": "AXUM",
+        "Github_Topic": "axum"
+    },
+    {
+        "index": 13,
+        "StackOverflow": "Bash/Shell (all shells)",
+        "Adzuna": "BASH/SHELL (ALL SHELLS)",
+        "Github_Topic": "bash"
+    },
+    {
+        "index": 14,
+        "StackOverflow": "BigQuery",
+        "Adzuna": "BIGQUERY",
+        "Github_Topic": "bigquery"
+    },
+    {
+        "index": 15,
+        "StackOverflow": "Blazor",
+        "Adzuna": "BLAZOR",
+        "Github_Topic": "blazor"
+    },
+    {
+        "index": 16,
+        "StackOverflow": "Bun",
+        "Adzuna": "BUN",
+        "Github_Topic": "bun"
+    },
+    {
+        "index": 17,
+        "StackOverflow": "C",
+        "Adzuna": "C",
+        "Github_Topic": "c"
+    },
+    {
+        "index": 18,
+        "StackOverflow": "C#",
+        "Adzuna": "C#",
+        "Github_Topic": "csharp"
+    },
+    {
+        "index": 19,
+        "StackOverflow": "C++",
+        "Adzuna": "C++",
+        "Github_Topic": "cpp"
+    },
+    {
+        "index": 20,
+        "StackOverflow": "COBOL",
+        "Adzuna": "COBOL",
+        "Github_Topic": "cobol"
+    },
+    {
+        "index": 21,
+        "StackOverflow": "Cargo",
+        "Adzuna": "CARGO",
+        "Github_Topic": "cargo"
+    },
+    {
+        "index": 22,
+        "StackOverflow": "Cassandra",
+        "Adzuna": "CASSANDRA",
+        "Github_Topic": "cassandra"
+    },
+    {
+        "index": 23,
+        "StackOverflow": "Chocolatey",
+        "Adzuna": "CHOCOLATEY",
+        "Github_Topic": "chocolatey"
+    },
+    {
+        "index": 24,
+        "StackOverflow": "Clickhouse",
+        "Adzuna": "CLICKHOUSE",
+        "Github_Topic": "clickhouse"
+    },
+    {
+        "index": 25,
+        "StackOverflow": "Cloud Firestore",
+        "Adzuna": "CLOUD FIRESTORE",
+        "Github_Topic": "cloud-firestore"
+    },
+    {
+        "index": 26,
+        "StackOverflow": "Cloudflare",
+        "Adzuna": "CLOUDFLARE",
+        "Github_Topic": "cloudflare"
+    },
+    {
+        "index": 27,
+        "StackOverflow": "Cockroachdb",
+        "Adzuna": "COCKROACHDB",
+        "Github_Topic": "cockroachdb"
+    },
+    {
+        "index": 28,
+        "StackOverflow": "Composer",
+        "Adzuna": "COMPOSER",
+        "Github_Topic": "composer"
+    },
+    {
+        "index": 29,
+        "StackOverflow": "Cosmos DB",
+        "Adzuna": "COSMOS DB",
+        "Github_Topic": "cosmos-db"
+    },
+    {
+        "index": 30,
+        "StackOverflow": "Dart",
+        "Adzuna": "DART",
+        "Github_Topic": "dart"
+    },
+    {
+        "index": 31,
+        "StackOverflow": "Databricks SQL",
+        "Adzuna": "DATABRICKS SQL",
+        "Github_Topic": "databricks-sql"
+    },
+    {
+        "index": 32,
+        "StackOverflow": "Datadog",
+        "Adzuna": "DATADOG",
+        "Github_Topic": "datadog"
+    },
+    {
+        "index": 33,
+        "StackOverflow": "Datomic",
+        "Adzuna": "DATOMIC",
+        "Github_Topic": "datomic"
+    },
+    {
+        "index": 34,
+        "StackOverflow": "Delphi",
+        "Adzuna": "DELPHI",
+        "Github_Topic": "delphi"
+    },
+    {
+        "index": 35,
+        "StackOverflow": "Deno",
+        "Adzuna": "DENO",
+        "Github_Topic": "deno"
+    },
+    {
+        "index": 36,
+        "StackOverflow": "Digital Ocean",
+        "Adzuna": "DIGITAL OCEAN",
+        "Github_Topic": "digital-ocean"
+    },
+    {
+        "index": 37,
+        "StackOverflow": "Django",
+        "Adzuna": "DJANGO",
+        "Github_Topic": "django"
+    },
+    {
+        "index": 38,
+        "StackOverflow": "Docker",
+        "Adzuna": "DOCKER",
+        "Github_Topic": "docker"
+    },
+    {
+        "index": 39,
+        "StackOverflow": "Drupal",
+        "Adzuna": "DRUPAL",
+        "Github_Topic": "drupal"
+    },
+    {
+        "index": 40,
+        "StackOverflow": "DuckDB",
+        "Adzuna": "DUCKDB",
+        "Github_Topic": "duckdb"
+    },
+    {
+        "index": 41,
+        "StackOverflow": "Dynamodb",
+        "Adzuna": "DYNAMODB",
+        "Github_Topic": "dynamodb"
+    },
+    {
+        "index": 42,
+        "StackOverflow": "Elasticsearch",
+        "Adzuna": "ELASTICSEARCH",
+        "Github_Topic": "elasticsearch"
+    },
+    {
+        "index": 43,
+        "StackOverflow": "Elixir",
+        "Adzuna": "ELIXIR",
+        "Github_Topic": "elixir"
+    },
+    {
+        "index": 44,
+        "StackOverflow": "Erlang",
+        "Adzuna": "ERLANG",
+        "Github_Topic": "erlang"
+    },
+    {
+        "index": 45,
+        "StackOverflow": "Express.js",
+        "Adzuna": "EXPRESS.JS",
+        "Github_Topic": "expressjs"
+    },
+    {
+        "index": 46,
+        "StackOverflow": "F#",
+        "Adzuna": "F#",
+        "Github_Topic": "fsharp"
+    },
+    {
+        "index": 47,
+        "StackOverflow": "FastAPI",
+        "Adzuna": "FASTAPI",
+        "Github_Topic": "fastapi"
+    },
+    {
+        "index": 48,
+        "StackOverflow": "Fastify",
+        "Adzuna": "FASTIFY",
+        "Github_Topic": "fastify"
+    },
+    {
+        "index": 49,
+        "StackOverflow": "Firebase",
+        "Adzuna": "FIREBASE",
+        "Github_Topic": "firebase"
+    },
+    {
+        "index": 50,
+        "StackOverflow": "Firebase Realtime Database",
+        "Adzuna": "FIREBASE REALTIME DATABASE",
+        "Github_Topic": "firebase-realtime-database"
+    },
+    {
+        "index": 51,
+        "StackOverflow": "Flask",
+        "Adzuna": "FLASK",
+        "Github_Topic": "flask"
+    },
+    {
+        "index": 52,
+        "StackOverflow": "Fortran",
+        "Adzuna": "FORTRAN",
+        "Github_Topic": "fortran"
+    },
+    {
+        "index": 53,
+        "StackOverflow": "GDScript",
+        "Adzuna": "GDSCRIPT",
+        "Github_Topic": "gdscript"
+    },
+    {
+        "index": 54,
+        "StackOverflow": "Gleam",
+        "Adzuna": "GLEAM",
+        "Github_Topic": "gleam"
+    },
+    {
+        "index": 55,
+        "StackOverflow": "Go",
+        "Adzuna": "GO",
+        "Github_Topic": "go"
+    },
+    {
+        "index": 56,
+        "StackOverflow": "Google Cloud",
+        "Adzuna": "GOOGLE CLOUD",
+        "Github_Topic": "google-cloud"
+    },
+    {
+        "index": 57,
+        "StackOverflow": "Gradle",
+        "Adzuna": "GRADLE",
+        "Github_Topic": "gradle"
+    },
+    {
+        "index": 58,
+        "StackOverflow": "Groovy",
+        "Adzuna": "GROOVY",
+        "Github_Topic": "groovy"
+    },
+    {
+        "index": 59,
+        "StackOverflow": "H2",
+        "Adzuna": "H2",
+        "Github_Topic": "h2"
+    },
+    {
+        "index": 60,
+        "StackOverflow": "HTML/CSS",
+        "Adzuna": "HTML/CSS",
+        "Github_Topic": "html"
+    },
+    {
+        "index": 61,
+        "StackOverflow": "Heroku",
+        "Adzuna": "HEROKU",
+        "Github_Topic": "heroku"
+    },
+    {
+        "index": 62,
+        "StackOverflow": "Homebrew",
+        "Adzuna": "HOMEBREW",
+        "Github_Topic": "homebrew"
+    },
+    {
+        "index": 63,
+        "StackOverflow": "IBM Cloud",
+        "Adzuna": "IBM CLOUD",
+        "Github_Topic": "ibm-cloud"
+    },
+    {
+        "index": 64,
+        "StackOverflow": "IBM DB2",
+        "Adzuna": "IBM DB2",
+        "Github_Topic": "ibm-db2"
+    },
+    {
+        "index": 65,
+        "StackOverflow": "InfluxDB",
+        "Adzuna": "INFLUXDB",
+        "Github_Topic": "influxdb"
+    },
+    {
+        "index": 66,
+        "StackOverflow": "Java",
+        "Adzuna": "JAVA",
+        "Github_Topic": "java"
+    },
+    {
+        "index": 67,
+        "StackOverflow": "JavaScript",
+        "Adzuna": "JAVASCRIPT",
+        "Github_Topic": "javascript"
+    },
+    {
+        "index": 68,
+        "StackOverflow": "Kotlin",
+        "Adzuna": "KOTLIN",
+        "Github_Topic": "kotlin"
+    },
+    {
+        "index": 69,
+        "StackOverflow": "Kubernetes",
+        "Adzuna": "KUBERNETES",
+        "Github_Topic": "kubernetes"
+    },
+    {
+        "index": 70,
+        "StackOverflow": "Laravel",
+        "Adzuna": "LARAVEL",
+        "Github_Topic": "laravel"
+    },
+    {
+        "index": 71,
+        "StackOverflow": "Lisp",
+        "Adzuna": "LISP",
+        "Github_Topic": "lisp"
+    },
+    {
+        "index": 72,
+        "StackOverflow": "Lua",
+        "Adzuna": "LUA",
+        "Github_Topic": "lua"
+    },
+    {
+        "index": 73,
+        "StackOverflow": "MATLAB",
+        "Adzuna": "MATLAB",
+        "Github_Topic": "matlab"
+    },
+    {
+        "index": 74,
+        "StackOverflow": "MSBuild",
+        "Adzuna": "MSBUILD",
+        "Github_Topic": "msbuild"
+    },
+    {
+        "index": 75,
+        "StackOverflow": "Make",
+        "Adzuna": "MAKE",
+        "Github_Topic": "make"
+    },
+    {
+        "index": 76,
+        "StackOverflow": "MariaDB",
+        "Adzuna": "MARIADB",
+        "Github_Topic": "mariadb"
+    },
+    {
+        "index": 77,
+        "StackOverflow": "Maven (build tool)",
+        "Adzuna": "MAVEN (BUILD TOOL)",
+        "Github_Topic": "maven"
+    },
+    {
+        "index": 78,
+        "StackOverflow": "MicroPython",
+        "Adzuna": "MICROPYTHON",
+        "Github_Topic": "micropython"
+    },
+    {
+        "index": 79,
+        "StackOverflow": "Microsoft Access",
+        "Adzuna": "MICROSOFT ACCESS",
+        "Github_Topic": "microsoft-access"
+    },
+    {
+        "index": 80,
+        "StackOverflow": "Microsoft Azure",
+        "Adzuna": "MICROSOFT AZURE",
+        "Github_Topic": "azure"
+    },
+    {
+        "index": 81,
+        "StackOverflow": "Microsoft SQL Server",
+        "Adzuna": "MICROSOFT SQL SERVER",
+        "Github_Topic": "sql-server"
+    },
+    {
+        "index": 82,
+        "StackOverflow": "Mojo",
+        "Adzuna": "MOJO",
+        "Github_Topic": "mojo"
+    },
+    {
+        "index": 83,
+        "StackOverflow": "MongoDB",
+        "Adzuna": "MONGODB",
+        "Github_Topic": "mongodb"
+    },
+    {
+        "index": 84,
+        "StackOverflow": "MySQL",
+        "Adzuna": "MYSQL",
+        "Github_Topic": "mysql"
+    },
+    {
+        "index": 85,
+        "StackOverflow": "Neo4J",
+        "Adzuna": "NEO4J",
+        "Github_Topic": "neo4j"
+    },
+    {
+        "index": 86,
+        "StackOverflow": "NestJS",
+        "Adzuna": "NESTJS",
+        "Github_Topic": "nestjs"
+    },
+    {
+        "index": 87,
+        "StackOverflow": "Netlify",
+        "Adzuna": "NETLIFY",
+        "Github_Topic": "netlify"
+    },
+    {
+        "index": 88,
+        "StackOverflow": "New Relic",
+        "Adzuna": "NEW RELIC",
+        "Github_Topic": "new-relic"
+    },
+    {
+        "index": 89,
+        "StackOverflow": "Next.js",
+        "Adzuna": "NEXT.JS",
+        "Github_Topic": "nextjs"
+    },
+    {
+        "index": 90,
+        "StackOverflow": "Ninja",
+        "Adzuna": "NINJA",
+        "Github_Topic": "ninja"
+    },
+    {
+        "index": 91,
+        "StackOverflow": "Node.js",
+        "Adzuna": "NODE.JS",
+        "Github_Topic": "nodejs"
+    },
+    {
+        "index": 92,
+        "StackOverflow": "NuGet",
+        "Adzuna": "NUGET",
+        "Github_Topic": "nuget"
+    },
+    {
+        "index": 93,
+        "StackOverflow": "Nuxt.js",
+        "Adzuna": "NUXT.JS",
+        "Github_Topic": "nuxtjs"
+    },
+    {
+        "index": 94,
+        "StackOverflow": "OCaml",
+        "Adzuna": "OCAML",
+        "Github_Topic": "ocaml"
+    },
+    {
+        "index": 95,
+        "StackOverflow": "Oracle",
+        "Adzuna": "ORACLE",
+        "Github_Topic": "oracle"
+    },
+    {
+        "index": 96,
+        "StackOverflow": "PHP",
+        "Adzuna": "PHP",
+        "Github_Topic": "php"
+    },
+    {
+        "index": 97,
+        "StackOverflow": "Pacman",
+        "Adzuna": "PACMAN",
+        "Github_Topic": "pacman"
+    },
+    {
+        "index": 98,
+        "StackOverflow": "Perl",
+        "Adzuna": "PERL",
+        "Github_Topic": "perl"
+    },
+    {
+        "index": 99,
+        "StackOverflow": "Phoenix",
+        "Adzuna": "PHOENIX",
+        "Github_Topic": "phoenix"
+    },
+    {
+        "index": 100,
+        "StackOverflow": "Pip",
+        "Adzuna": "PIP",
+        "Github_Topic": "pip"
+    },
+    {
+        "index": 101,
+        "StackOverflow": "Pocketbase",
+        "Adzuna": "POCKETBASE",
+        "Github_Topic": "pocketbase"
+    },
+    {
+        "index": 102,
+        "StackOverflow": "Podman",
+        "Adzuna": "PODMAN",
+        "Github_Topic": "podman"
+    },
+    {
+        "index": 103,
+        "StackOverflow": "Poetry",
+        "Adzuna": "POETRY",
+        "Github_Topic": "poetry"
+    },
+    {
+        "index": 104,
+        "StackOverflow": "PostgreSQL",
+        "Adzuna": "POSTGRESQL",
+        "Github_Topic": "postgresql"
+    },
+    {
+        "index": 105,
+        "StackOverflow": "PowerShell",
+        "Adzuna": "POWERSHELL",
+        "Github_Topic": "powershell"
+    },
+    {
+        "index": 106,
+        "StackOverflow": "Prolog",
+        "Adzuna": "PROLOG",
+        "Github_Topic": "prolog"
+    },
+    {
+        "index": 107,
+        "StackOverflow": "Prometheus",
+        "Adzuna": "PROMETHEUS",
+        "Github_Topic": "prometheus"
+    },
+    {
+        "index": 108,
+        "StackOverflow": "Python",
+        "Adzuna": "PYTHON",
+        "Github_Topic": "python"
+    },
+    {
+        "index": 109,
+        "StackOverflow": "R",
+        "Adzuna": "R",
+        "Github_Topic": "r"
+    },
+    {
+        "index": 110,
+        "StackOverflow": "Railway",
+        "Adzuna": "RAILWAY",
+        "Github_Topic": "railway"
+    },
+    {
+        "index": 111,
+        "StackOverflow": "React",
+        "Adzuna": "REACT",
+        "Github_Topic": "react"
+    },
+    {
+        "index": 112,
+        "StackOverflow": "Redis",
+        "Adzuna": "REDIS",
+        "Github_Topic": "redis"
+    },
+    {
+        "index": 113,
+        "StackOverflow": "Ruby",
+        "Adzuna": "RUBY",
+        "Github_Topic": "ruby"
+    },
+    {
+        "index": 114,
+        "StackOverflow": "Ruby on Rails",
+        "Adzuna": "RUBY ON RAILS",
+        "Github_Topic": "ruby-on-rails"
+    },
+    {
+        "index": 115,
+        "StackOverflow": "Rust",
+        "Adzuna": "RUST",
+        "Github_Topic": "rust"
+    },
+    {
+        "index": 116,
+        "StackOverflow": "SQL",
+        "Adzuna": "SQL",
+        "Github_Topic": "sql"
+    },
+    {
+        "index": 117,
+        "StackOverflow": "SQLite",
+        "Adzuna": "SQLITE",
+        "Github_Topic": "sqlite"
+    },
+    {
+        "index": 118,
+        "StackOverflow": "Scala",
+        "Adzuna": "SCALA",
+        "Github_Topic": "scala"
+    },
+    {
+        "index": 119,
+        "StackOverflow": "Snowflake",
+        "Adzuna": "SNOWFLAKE",
+        "Github_Topic": "snowflake"
+    },
+    {
+        "index": 120,
+        "StackOverflow": "Splunk",
+        "Adzuna": "SPLUNK",
+        "Github_Topic": "splunk"
+    },
+    {
+        "index": 121,
+        "StackOverflow": "Spring Boot",
+        "Adzuna": "SPRING BOOT",
+        "Github_Topic": "spring-boot"
+    },
+    {
+        "index": 122,
+        "StackOverflow": "Supabase",
+        "Adzuna": "SUPABASE",
+        "Github_Topic": "supabase"
+    },
+    {
+        "index": 123,
+        "StackOverflow": "Svelte",
+        "Adzuna": "SVELTE",
+        "Github_Topic": "svelte"
+    },
+    {
+        "index": 124,
+        "StackOverflow": "Swift",
+        "Adzuna": "SWIFT",
+        "Github_Topic": "swift"
+    },
+    {
+        "index": 125,
+        "StackOverflow": "Symfony",
+        "Adzuna": "SYMFONY",
+        "Github_Topic": "symfony"
+    },
+    {
+        "index": 126,
+        "StackOverflow": "Terraform",
+        "Adzuna": "TERRAFORM",
+        "Github_Topic": "terraform"
+    },
+    {
+        "index": 127,
+        "StackOverflow": "TypeScript",
+        "Adzuna": "TYPESCRIPT",
+        "Github_Topic": "typescript"
+    },
+    {
+        "index": 128,
+        "StackOverflow": "VBA",
+        "Adzuna": "VBA",
+        "Github_Topic": "vba"
+    },
+    {
+        "index": 129,
+        "StackOverflow": "Valkey",
+        "Adzuna": "VALKEY",
+        "Github_Topic": "valkey"
+    },
+    {
+        "index": 130,
+        "StackOverflow": "Vercel",
+        "Adzuna": "VERCEL",
+        "Github_Topic": "vercel"
+    },
+    {
+        "index": 131,
+        "StackOverflow": "Visual Basic (.Net)",
+        "Adzuna": "VISUAL BASIC (.NET)",
+        "Github_Topic": "visual-basic"
+    },
+    {
+        "index": 132,
+        "StackOverflow": "Vite",
+        "Adzuna": "VITE",
+        "Github_Topic": "vite"
+    },
+    {
+        "index": 133,
+        "StackOverflow": "Vue.js",
+        "Adzuna": "VUE.JS",
+        "Github_Topic": "vue"
+    },
+    {
+        "index": 134,
+        "StackOverflow": "Webpack",
+        "Adzuna": "WEBPACK",
+        "Github_Topic": "webpack"
+    },
+    {
+        "index": 135,
+        "StackOverflow": "WordPress",
+        "Adzuna": "WORDPRESS",
+        "Github_Topic": "wordpress"
+    },
+    {
+        "index": 136,
+        "StackOverflow": "Yandex Cloud",
+        "Adzuna": "YANDEX CLOUD",
+        "Github_Topic": "yandex-cloud"
+    },
+    {
+        "index": 137,
+        "StackOverflow": "Yarn",
+        "Adzuna": "YARN",
+        "Github_Topic": "yarn"
+    },
+    {
+        "index": 138,
+        "StackOverflow": "Zig",
+        "Adzuna": "ZIG",
+        "Github_Topic": "zig"
+    },
+    {
+        "index": 139,
+        "StackOverflow": "jQuery",
+        "Adzuna": "JQUERY",
+        "Github_Topic": "jquery"
+    },
+    {
+        "index": 140,
+        "StackOverflow": "npm",
+        "Adzuna": "NPM",
+        "Github_Topic": "npm"
+    },
+    {
+        "index": 141,
+        "StackOverflow": "pnpm",
+        "Adzuna": "PNPM",
+        "Github_Topic": "pnpm"
+    }
+]

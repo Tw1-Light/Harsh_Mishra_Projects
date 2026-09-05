@@ -1,0 +1,326 @@
+{
+  "version": "2.0.0",
+  "last_updated": "2026-07-23",
+  "description": "Emerging technologies not covered or underrepresented in the Stack Overflow Developer Survey baseline. v2 adds AI agent frameworks, vector DBs, and data lakehouse tooling that gained material adoption between mid-2025 and mid-2026.",
+
+  "technologies": [
+    {
+      "canonical_name": "LangChain",
+      "github_topic": "langchain",
+      "aliases": ["lang chain"],
+      "category": "AI Framework",
+      "status": "active"
+    },
+    {
+      "canonical_name": "LangGraph",
+      "github_topic": "langgraph",
+      "aliases": [],
+      "category": "AI Framework",
+      "status": "active"
+    },
+    {
+      "canonical_name": "CrewAI",
+      "github_topic": "crewai",
+      "aliases": ["crew ai"],
+      "category": "AI Framework",
+      "status": "active"
+    },
+    {
+      "canonical_name": "AutoGen",
+      "github_topic": "autogen",
+      "aliases": ["microsoft autogen"],
+      "category": "AI Framework",
+      "status": "active"
+    },
+    {
+      "canonical_name": "OpenAI Agents SDK",
+      "github_topic": "openai-agents",
+      "aliases": ["agents sdk"],
+      "category": "AI Framework",
+      "status": "active"
+    },
+    {
+      "canonical_name": "LlamaIndex",
+      "github_topic": "llamaindex",
+      "aliases": [],
+      "category": "AI Framework",
+      "status": "active"
+    },
+    {
+      "canonical_name": "Haystack",
+      "github_topic": "haystack",
+      "aliases": ["deepset haystack"],
+      "category": "AI Framework",
+      "status": "active"
+    },
+    {
+      "canonical_name": "Semantic Kernel",
+      "github_topic": "semantic-kernel",
+      "aliases": [],
+      "category": "AI Framework",
+      "status": "active"
+    },
+    {
+      "canonical_name": "DSPy",
+      "github_topic": "dspy",
+      "aliases": [],
+      "category": "AI Framework",
+      "status": "active"
+    },
+    {
+      "canonical_name": "Model Context Protocol",
+      "github_topic": "model-context-protocol",
+      "aliases": ["MCP"],
+      "category": "AI Protocol",
+      "status": "active"
+    },
+    {
+      "canonical_name": "vLLM",
+      "github_topic": "vllm",
+      "aliases": [],
+      "category": "LLM Serving",
+      "status": "active"
+    },
+    {
+      "canonical_name": "Ollama",
+      "github_topic": "ollama",
+      "aliases": [],
+      "category": "LLM Serving",
+      "status": "active"
+    },
+    {
+      "canonical_name": "LiteLLM",
+      "github_topic": "litellm",
+      "aliases": [],
+      "category": "LLM Gateway",
+      "status": "active"
+    },
+    {
+      "canonical_name": "LM Studio",
+      "github_topic": "lm-studio",
+      "aliases": [],
+      "category": "LLM Runtime",
+      "status": "active"
+    },
+    {
+      "canonical_name": "n8n",
+      "github_topic": "n8n",
+      "aliases": [],
+      "category": "Automation",
+      "status": "active"
+    },
+    {
+      "canonical_name": "Flowise",
+      "github_topic": "flowise",
+      "aliases": [],
+      "category": "Automation",
+      "status": "active"
+    },
+    {
+      "canonical_name": "Dify",
+      "github_topic": "dify",
+      "aliases": [],
+      "category": "Automation",
+      "status": "active"
+    },
+    {
+      "canonical_name": "Airbyte",
+      "github_topic": "airbyte",
+      "aliases": [],
+      "category": "Data Engineering",
+      "status": "active"
+    },
+    {
+      "canonical_name": "dbt",
+      "github_topic": "dbt",
+      "aliases": ["dbt core"],
+      "category": "Data Engineering",
+      "status": "active"
+    },
+    {
+      "canonical_name": "MotherDuck",
+      "github_topic": "motherduck",
+      "aliases": [],
+      "category": "Analytics",
+      "status": "active"
+    },
+    {
+      "canonical_name": "DuckDB",
+      "github_topic": "duckdb",
+      "aliases": [],
+      "category": "Analytics",
+      "status": "active"
+    },
+    {
+      "canonical_name": "FastAPI",
+      "github_topic": "fastapi",
+      "aliases": [],
+      "category": "Backend",
+      "status": "active"
+    },
+    {
+      "canonical_name": "uv",
+      "github_topic": "uv",
+      "aliases": [],
+      "category": "Python Tooling",
+      "status": "active"
+    },
+    {
+      "canonical_name": "Ruff",
+      "github_topic": "ruff",
+      "aliases": [],
+      "category": "Python Tooling",
+      "status": "active"
+    },
+    {
+      "canonical_name": "Modal",
+      "github_topic": "modal",
+      "aliases": [],
+      "category": "Cloud AI",
+      "status": "active"
+    },
+    {
+      "canonical_name": "Modal Labs",
+      "github_topic": "modal",
+      "aliases": [],
+      "category": "Cloud AI",
+      "status": "deprecated_alias"
+    },
+
+    {
+      "canonical_name": "Langflow",
+      "github_topic": "langflow",
+      "aliases": [],
+      "category": "AI Framework",
+      "status": "active"
+    },
+    {
+      "canonical_name": "Mem0",
+      "github_topic": "mem0",
+      "aliases": [],
+      "category": "AI Memory Layer",
+      "status": "active"
+    },
+    {
+      "canonical_name": "RAGFlow",
+      "github_topic": "ragflow",
+      "aliases": [],
+      "category": "RAG Framework",
+      "status": "active"
+    },
+    {
+      "canonical_name": "Claude Code",
+      "github_topic": "claude-code",
+      "aliases": [],
+      "category": "AI Coding Agent",
+      "status": "active"
+    },
+    {
+      "canonical_name": "Cursor",
+      "github_topic": "cursor",
+      "aliases": [],
+      "category": "AI Coding Agent",
+      "status": "active"
+    },
+    {
+      "canonical_name": "Gemini CLI",
+      "github_topic": "gemini-cli",
+      "aliases": [],
+      "category": "AI Coding Agent",
+      "status": "active"
+    },
+
+    {
+      "canonical_name": "Pinecone",
+      "github_topic": "pinecone",
+      "aliases": [],
+      "category": "Vector Database",
+      "status": "active"
+    },
+    {
+      "canonical_name": "Weaviate",
+      "github_topic": "weaviate",
+      "aliases": [],
+      "category": "Vector Database",
+      "status": "active"
+    },
+    {
+      "canonical_name": "Qdrant",
+      "github_topic": "qdrant",
+      "aliases": [],
+      "category": "Vector Database",
+      "status": "active"
+    },
+    {
+      "canonical_name": "Milvus",
+      "github_topic": "milvus",
+      "aliases": [],
+      "category": "Vector Database",
+      "status": "active"
+    },
+    {
+      "canonical_name": "Chroma",
+      "github_topic": "chroma",
+      "aliases": ["chromadb"],
+      "category": "Vector Database",
+      "status": "active"
+    },
+    {
+      "canonical_name": "LanceDB",
+      "github_topic": "lancedb",
+      "aliases": [],
+      "category": "Vector Database",
+      "status": "active"
+    },
+
+    {
+      "canonical_name": "Apache Iceberg",
+      "github_topic": "iceberg",
+      "aliases": [],
+      "category": "Lakehouse Table Format",
+      "status": "active"
+    },
+    {
+      "canonical_name": "Delta Lake",
+      "github_topic": "delta-lake",
+      "aliases": [],
+      "category": "Lakehouse Table Format",
+      "status": "active"
+    },
+    {
+      "canonical_name": "Apache Hudi",
+      "github_topic": "hudi",
+      "aliases": [],
+      "category": "Lakehouse Table Format",
+      "status": "active"
+    },
+    {
+      "canonical_name": "dlt",
+      "github_topic": "dlt",
+      "aliases": ["data load tool"],
+      "category": "Data Engineering",
+      "status": "active"
+    },
+    {
+      "canonical_name": "Great Expectations",
+      "github_topic": "great-expectations",
+      "aliases": ["ge"],
+      "category": "Data Quality",
+      "status": "active"
+    },
+    {
+      "canonical_name": "Monte Carlo",
+      "github_topic": "monte-carlo-data",
+      "aliases": [],
+      "category": "Data Observability",
+      "status": "active"
+    },
+    {
+      "canonical_name": "Apache Flink",
+      "github_topic": "flink",
+      "aliases": [],
+      "category": "Stream Processing",
+      "status": "active"
+    }
+  ]
+}
