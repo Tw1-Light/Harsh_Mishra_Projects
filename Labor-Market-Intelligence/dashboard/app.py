@@ -32,9 +32,18 @@ st.set_page_config(
 # ---------------------------------------------------------------------------
 @st.cache_data(ttl=3600, show_spinner="Loading data...")
 def load_data() -> pd.DataFrame:
-    """Load fct_skill_signals from DuckDB."""
-    os.environ["PROJECT_ROOT"] = _PROJECT_ROOT
-    con = duckdb.connect(str(_DB_PATH), read_only=True)
+    """Load fct_skill_signals — local DuckDB in dev, MotherDuck in prod."""
+    # MotherDuck token from Streamlit secrets or env
+    md_token = st.secrets.get("MotherDuck_token", os.getenv("MotherDuck_token", ""))
+
+    if _DB_PATH.exists():
+        con = duckdb.connect(str(_DB_PATH), read_only=True)
+    elif md_token:
+        con = duckdb.connect(f"md:labor_market?motherduck_token={md_token}")
+    else:
+        st.error("No local DuckDB found and no MotherDuck_token set.")
+        st.stop()
+
     df = con.execute("""
         SELECT
             canonical_name,
@@ -55,8 +64,13 @@ def load_data() -> pd.DataFrame:
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def load_snapshots() -> pd.DataFrame:
-    os.environ["PROJECT_ROOT"] = _PROJECT_ROOT
-    con = duckdb.connect(str(_DB_PATH), read_only=True)
+    md_token = st.secrets.get("MotherDuck_token", os.getenv("MotherDuck_token", ""))
+    if _DB_PATH.exists():
+        con = duckdb.connect(str(_DB_PATH), read_only=True)
+    elif md_token:
+        con = duckdb.connect(f"md:labor_market?motherduck_token={md_token}")
+    else:
+        return pd.DataFrame()
     df = con.execute("""
         SELECT *
         FROM main_staging.stg_github_snapshots
