@@ -27,8 +27,9 @@ models:
         tests:
           - not_null
           - relationships:
-              to: ref('dim_technology')
-              field: tech_id
+              arguments:
+                to: ref('dim_technology')
+                field: tech_id
       - name: signal_week
         tests:
           - not_null
@@ -39,4 +40,5 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: ['thriving', 'demand_led', 'hype_led', 'weak']
+              arguments:
+                values: ['thriving', 'demand_led', 'hype_led', 'weak']

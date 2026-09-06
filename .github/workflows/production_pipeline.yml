@@ -27,10 +27,10 @@ jobs:
 
     env:
       PROJECT_ROOT: ${{ github.workspace }}/Labor-Market-Intelligence
-      MotherDuck_token: ${{ secrets.MotherDuck_token }}
-      Adzuna_app_id: ${{ secrets.Adzuna_app_id }}
-      Adzuna_api: ${{ secrets.Adzuna_api }}
-      GitHub_access_token: ${{ secrets.GitHub_access_token }}
+      MotherDuck_token: ${{ secrets.MotherDuck_token || secrets.MOTHERDUCK_TOKEN || secrets.motherduck_token }}
+      Adzuna_app_id: ${{ secrets.Adzuna_app_id || secrets.ADZUNA_APP_ID }}
+      Adzuna_api: ${{ secrets.Adzuna_api || secrets.ADZUNA_API || secrets.ADZUNA_API_KEY }}
+      GitHub_access_token: ${{ secrets.GitHub_access_token || secrets.GITHUB_ACCESS_TOKEN || secrets.GH_PAT || secrets.GITHUB_TOKEN }}
 
     steps:
       - name: Checkout repository
@@ -50,12 +50,29 @@ jobs:
       - name: Verify Environment Secrets
         run: |
           python -c "
-          import os
+          import os, sys
+          md = os.getenv('MotherDuck_token')
+          adz_id = os.getenv('Adzuna_app_id')
+          adz_key = os.getenv('Adzuna_api')
+          gh = os.getenv('GitHub_access_token')
+
           print('Secrets Presence Check:')
-          print('  MotherDuck_token:', 'Configured' if os.getenv('MotherDuck_token') else 'MISSING')
-          print('  Adzuna_app_id:   ', 'Configured' if os.getenv('Adzuna_app_id') else 'MISSING')
-          print('  Adzuna_api:      ', 'Configured' if os.getenv('Adzuna_api') else 'MISSING')
-          print('  GitHub token:    ', 'Configured' if os.getenv('GitHub_access_token') else 'MISSING')
+          print('  MotherDuck_token:', 'Configured' if md else 'MISSING')
+          print('  Adzuna_app_id:   ', 'Configured' if adz_id else 'MISSING')
+          print('  Adzuna_api:      ', 'Configured' if adz_key else 'MISSING')
+          print('  GitHub token:    ', 'Configured' if gh else 'MISSING')
+
+          if not md:
+              print('\n' + '='*70)
+              print('[FATAL ERROR] MotherDuck token is MISSING from GitHub Secrets!')
+              print('dbt cannot connect to MotherDuck in headless CI without a valid token.')
+              print('To fix this:')
+              print('1. Go to: https://github.com/Tw1-Light/Harsh_Mishra_Projects/settings/secrets/actions')
+              print('2. Under \"Repository secrets\", click \"New repository secret\"')
+              print('3. Name: MotherDuck_token (or MOTHERDUCK_TOKEN)')
+              print('4. Value: <Paste your MotherDuck token starting with eyJ...>')
+              print('='*70 + '\n')
+              sys.exit(1)
           "
 
       - name: Cache Stack Overflow Survey Parquet
@@ -118,12 +135,14 @@ jobs:
 
       - name: Run dbt against MotherDuck (Production)
         run: |
-          export MOTHERDUCK_TOKEN="${MotherDuck_token:-$MOTHERDUCK_TOKEN}"
+          export MotherDuck_token="${MotherDuck_token:-$MOTHERDUCK_TOKEN}"
+          export MOTHERDUCK_TOKEN="${MotherDuck_token}"
           dbt run --target prod --profiles-dir dbt --project-dir dbt
 
       - name: Run dbt Data Quality Tests (Production)
         run: |
-          export MOTHERDUCK_TOKEN="${MotherDuck_token:-$MOTHERDUCK_TOKEN}"
+          export MotherDuck_token="${MotherDuck_token:-$MOTHERDUCK_TOKEN}"
+          export MOTHERDUCK_TOKEN="${MotherDuck_token}"
           dbt test --target prod --profiles-dir dbt --project-dir dbt
 
       - name: Pipeline Health Summary

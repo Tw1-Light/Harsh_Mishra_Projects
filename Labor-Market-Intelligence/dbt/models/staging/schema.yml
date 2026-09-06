@@ -18,7 +18,8 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: ['language', 'database', 'webframe', 'platform']
+              arguments:
+                values: ['language', 'database', 'webframe', 'platform']
 
   - name: stg_adzuna
     description: "Adzuna job postings exploded by matched technology keyword"
@@ -57,7 +58,8 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: ['project', 'educational', 'collection', 'other', 'uncertain', 'excluded']
+              arguments:
+                values: ['project', 'educational', 'collection', 'other', 'uncertain', 'excluded']
       - name: stars
         tests:
           - not_null
