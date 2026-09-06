@@ -8,5 +8,5 @@ labor_market_intelligence:
     prod:
       type: duckdb
       path: "md:labor_market"
-      token: "{{ env_var('MotherDuck_token', '') }}"
+      token: "{{ env_var('MotherDuck_token', env_var('MOTHERDUCK_TOKEN', '')) }}"
       threads: 4

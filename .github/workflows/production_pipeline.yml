@@ -77,20 +77,29 @@ jobs:
             rm -f raw/stackoverflow/survey_result.csv
           fi
 
+      - name: Cache GitHub Datasets
+        id: cache-gh-data
+        uses: actions/cache@v4
+        with:
+          path: |
+            Labor-Market-Intelligence/raw/github/all_repos.parquet
+            Labor-Market-Intelligence/raw/github/all_snapshots.parquet
+          key: gh-parquets-v1
+
       - name: Extract Adzuna Job Postings (Daily)
         run: |
           echo "Running daily Adzuna job extraction..."
           python raw/adzuna/daily_data.py || true
           python raw/adzuna/build_adzuna_csv.py
 
-      - name: Extract GitHub Ecosystem Snapshots (Monthly)
+      - name: Extract GitHub Ecosystem Snapshots (Monthly or First Run)
         run: |
           DAY=$(date +%d)
-          if [ "$DAY" = "01" ] || [ "${{ inputs.force_github_refresh }}" = "true" ]; then
-            echo "Executing monthly GitHub snapshot extraction..."
+          if [ "$DAY" = "01" ] || [ "${{ inputs.force_github_refresh }}" = "true" ] || [ ! -f raw/github/all_repos.parquet ] || [ ! -f raw/github/all_snapshots.parquet ]; then
+            echo "Executing GitHub snapshot extraction..."
             python raw/github/github_extractor.py
           else
-            echo "Today is day $DAY (not 01). Skipping GitHub extractor."
+            echo "GitHub parquets already exist. Skipping extraction."
           fi
 
       - name: Consolidate Raw Parquet Datasets
@@ -102,10 +111,14 @@ jobs:
         run: dbt deps --profiles-dir dbt --project-dir dbt
 
       - name: Run dbt against MotherDuck (Production)
-        run: dbt run --target prod --profiles-dir dbt --project-dir dbt
+        run: |
+          export MOTHERDUCK_TOKEN="${MotherDuck_token:-$MOTHERDUCK_TOKEN}"
+          dbt run --target prod --profiles-dir dbt --project-dir dbt
 
       - name: Run dbt Data Quality Tests (Production)
-        run: dbt test --target prod --profiles-dir dbt --project-dir dbt
+        run: |
+          export MOTHERDUCK_TOKEN="${MotherDuck_token:-$MOTHERDUCK_TOKEN}"
+          dbt test --target prod --profiles-dir dbt --project-dir dbt
 
       - name: Pipeline Health Summary
         run: |
