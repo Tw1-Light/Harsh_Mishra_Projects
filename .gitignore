@@ -1,0 +1,15 @@
+# DuckDB databases (local OLAP storage - do not push to Git)
+*.duckdb
+*.duckdb.wal
+*.duckdb.tmp
+**/*.duckdb*
+
+# Secrets & Env
+.env
+*.env
+
+# Python & System
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db
