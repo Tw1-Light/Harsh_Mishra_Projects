@@ -5,6 +5,7 @@ Theme: Editorial light theme (#fbfbfa), Plus Jakarta Sans & IBM Plex Mono typogr
 """
 
 import os
+import re
 import math
 from pathlib import Path
 
@@ -129,7 +130,7 @@ DIVERGENCE_NOTES = {
     "Angular": "Established corporate frontend framework with sustained enterprise maintenance demand.",
 }
 
-# ── HTML Safe Rendering Helper ──────────────────────────────────────────────
+# ── Safe HTML Helper ─────────────────────────────────────────────────────────
 def render_html(html_str: str):
     """
     Renders HTML safely without CommonMark treating indented lines as code blocks.
@@ -172,43 +173,64 @@ section[data-testid="stSidebar"] { display: none !important; }
     margin: 0 auto !important;
 }
 
-/* Monospace */
+/* Code Elements: Light background with crisp dark text (Never black on black) */
 code, kbd, samp, pre, .font-mono {
     font-family: 'IBM Plex Mono', monospace !important;
     font-feature-settings: "tnum" !important;
 }
+code {
+    background-color: #f0f0eb !important;
+    color: #171717 !important;
+    padding: 2px 6px !important;
+    border-radius: 3px !important;
+    font-size: 11px !important;
+    border: 1px solid #e2e2dc !important;
+}
 
-/* Custom Tabs matching Header.tsx */
+/* Navigation Tabs: Always crisp & visible */
 div[data-baseweb="tab-list"] {
     background-color: #fbfbfa !important;
     border-bottom: 1px solid #e5e5df !important;
-    gap: 4px !important;
+    gap: 6px !important;
     padding: 0 !important;
-    margin-top: 0 !important;
+    margin-top: 4px !important;
     margin-bottom: 1.5rem !important;
 }
 button[data-baseweb="tab"] {
-    font-family: 'Plus Jakarta Sans', sans-serif !important;
-    font-size: 12px !important;
-    font-weight: 500 !important;
-    letter-spacing: 0.02em !important;
-    color: #5a5a54 !important;
     background: transparent !important;
-    padding: 10px 16px !important;
     border: none !important;
     border-radius: 4px 4px 0 0 !important;
+    padding: 10px 18px !important;
     cursor: pointer !important;
+    opacity: 1 !important;
     transition: all 0.15s ease !important;
 }
-button[data-baseweb="tab"]:hover {
+button[data-baseweb="tab"] p,
+button[data-baseweb="tab"] span,
+button[data-baseweb="tab"] div,
+button[data-baseweb="tab"] {
+    font-family: 'Plus Jakarta Sans', sans-serif !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    color: #5a5a54 !important;
+    letter-spacing: 0.02em !important;
+}
+button[data-baseweb="tab"]:hover,
+button[data-baseweb="tab"]:hover p,
+button[data-baseweb="tab"]:hover span,
+button[data-baseweb="tab"]:hover div {
     color: #171717 !important;
     background-color: #f5f5f0 !important;
 }
 button[data-baseweb="tab"][aria-selected="true"] {
-    color: #171717 !important;
     background-color: #f0f0eb !important;
-    font-weight: 600 !important;
     border-bottom: 2px solid #171717 !important;
+}
+button[data-baseweb="tab"][aria-selected="true"] p,
+button[data-baseweb="tab"][aria-selected="true"] span,
+button[data-baseweb="tab"][aria-selected="true"] div {
+    color: #171717 !important;
+    font-weight: 700 !important;
 }
 div[data-baseweb="tab-highlight"] {
     background-color: #171717 !important;
@@ -216,6 +238,35 @@ div[data-baseweb="tab-highlight"] {
 }
 div[data-baseweb="tab-border"] {
     display: none !important;
+}
+
+/* Radio Selector Pills: Dark text on light background (Never white on white) */
+div[data-testid="stRadio"] > div {
+    gap: 4px !important;
+    background-color: #f0f0eb !important;
+    padding: 3px 4px !important;
+    border-radius: 4px !important;
+    border: 1px solid #e2e2dc !important;
+}
+div[data-testid="stRadio"] label {
+    padding: 4px 8px !important;
+    border-radius: 3px !important;
+    margin: 0 !important;
+    cursor: pointer !important;
+}
+div[data-testid="stRadio"] label p,
+div[data-testid="stRadio"] label span,
+div[data-testid="stRadio"] p,
+div[data-testid="stRadio"] span,
+div[data-testid="stRadio"] div {
+    font-family: 'IBM Plex Mono', monospace !important;
+    font-size: 11px !important;
+    font-weight: 500 !important;
+    color: #171717 !important;
+}
+div[data-testid="stRadio"] label:hover p,
+div[data-testid="stRadio"] label:hover span {
+    color: #000000 !important;
 }
 
 /* Form Controls */
@@ -230,24 +281,6 @@ input[type="text"], select, .stSelectbox > div > div {
 input[type="text"]:focus {
     border-color: #171717 !important;
     box-shadow: none !important;
-}
-
-/* Streamlit Radio as Pills */
-div[data-testid="stRadio"] > div {
-    gap: 6px !important;
-    background-color: #f0f0eb !important;
-    padding: 4px !important;
-    border-radius: 4px !important;
-    border: 1px solid #e2e2dc !important;
-}
-div[data-testid="stRadio"] label {
-    font-family: 'IBM Plex Mono', monospace !important;
-    font-size: 11px !important;
-    color: #575752 !important;
-    padding: 4px 10px !important;
-    border-radius: 3px !important;
-    margin: 0 !important;
-    cursor: pointer !important;
 }
 
 /* Scrollbars */
@@ -339,7 +372,28 @@ div[data-testid="stRadio"] label {
 """, unsafe_allow_html=True)
 
 
-# ── Data Loading ─────────────────────────────────────────────────────────────
+# ── Data Loading with Dynamic Year Extraction ────────────────────────────────
+def extract_so_year() -> str:
+    """Dynamically extracts Stack Overflow survey year from raw/get_data.py."""
+    try:
+        p = _REPO_ROOT / "raw" / "stackoverflow" / "get_data.py"
+        if p.exists():
+            m = re.search(r"/archive/(\d{4})/", p.read_text(encoding="utf-8"))
+            if m:
+                return m.group(1)
+    except Exception:
+        pass
+    try:
+        p2 = _REPO_ROOT / "raw" / "stackoverflow" / "filter_data.py"
+        if p2.exists():
+            m2 = re.search(r"202\d", p2.read_text(encoding="utf-8"))
+            if m2:
+                return m2.group(0)
+    except Exception:
+        pass
+    return "2025"
+
+
 @st.cache_data(ttl=3600, show_spinner="Connecting to MotherDuck data marts...")
 def load_all_data():
     try:
@@ -407,6 +461,8 @@ def load_all_data():
 
     con.close()
 
+    so_year = extract_so_year()
+
     # Assign category & divergence note
     df["category"] = df["canonical_name"].apply(lambda name: TECH_CATEGORIES.get(name, "DevOps & Tooling"))
     df["divergence_note"] = df["canonical_name"].apply(lambda name: DIVERGENCE_NOTES.get(name, ""))
@@ -417,10 +473,10 @@ def load_all_data():
         lambda j: int(min(45, max(-20, (hash(str(j)) % 35) - 8))) if j > 0 else 0
     )
 
-    return df, adzuna_date, github_date
+    return df, adzuna_date, github_date, so_year
 
 
-df_techs, ADZUNA_DATE, GITHUB_DATE = load_all_data()
+df_techs, ADZUNA_DATE, GITHUB_DATE, SO_YEAR = load_all_data()
 
 TOTAL_TECHS = len(df_techs)
 TOTAL_JOBS = 1788  # Canonical Adzuna IT India deduplicated total
@@ -464,8 +520,6 @@ def build_quadrant_plot(
         df = df[df["canonical_name"].str.lower().str.contains(q)]
 
     # Sqrt scale transform to space points between 0 and 50 jobs
-    # Threshold X = 5 jobs -> sqrt(5) = 2.236
-    # Plot domain X: 0 to sqrt(50) = 7.071 (covers high end while giving left 32% width)
     max_raw_jobs = max(35, df["weekly_job_count"].max() + 5)
     max_x_sqrt = math.sqrt(max_raw_jobs)
     threshold_x = math.sqrt(5)
@@ -523,30 +577,30 @@ def build_quadrant_plot(
         borderpad=3, xanchor="right"
     )
 
-    # Corner Watermark Labels
+    # Corner Watermark Labels (Positioned safely at perimeter to prevent overlap)
     fig.add_annotation(
-        x=0.15, y=94, text="<b>HYPE-LED</b><br><span style='font-size:9px;'>Jobs &lt; 5 • Repos ≥ 30</span>",
-        showarrow=False, align="left", xanchor="left",
-        font=dict(family="IBM Plex Mono", size=11, color="#92400e")
+        x=0.08, y=102, text="<b>HYPE-LED</b><br><span style='font-size:9px;'>Jobs &lt; 5 • Repos ≥ 30</span>",
+        showarrow=False, align="left", xanchor="left", yanchor="top",
+        font=dict(family="IBM Plex Mono", size=11, color="rgba(146, 64, 14, 0.7)")
     )
     fig.add_annotation(
-        x=max_x_sqrt * 0.96, y=94, text="<b>THRIVING</b><br><span style='font-size:9px;'>Jobs ≥ 5 • Repos ≥ 30</span>",
-        showarrow=False, align="right", xanchor="right",
-        font=dict(family="IBM Plex Mono", size=11, color="#065f46")
+        x=max_x_sqrt * 0.98, y=102, text="<b>THRIVING</b><br><span style='font-size:9px;'>Jobs ≥ 5 • Repos ≥ 30</span>",
+        showarrow=False, align="right", xanchor="right", yanchor="top",
+        font=dict(family="IBM Plex Mono", size=11, color="rgba(6, 95, 70, 0.7)")
     )
     fig.add_annotation(
-        x=0.15, y=6, text="<b>WEAK</b><br><span style='font-size:9px;'>Jobs &lt; 5 • Repos &lt; 30</span>",
-        showarrow=False, align="left", xanchor="left",
-        font=dict(family="IBM Plex Mono", size=11, color="#475569")
+        x=0.08, y=2, text="<b>WEAK</b><br><span style='font-size:9px;'>Jobs &lt; 5 • Repos &lt; 30</span>",
+        showarrow=False, align="left", xanchor="left", yanchor="bottom",
+        font=dict(family="IBM Plex Mono", size=11, color="rgba(71, 85, 105, 0.7)")
     )
     fig.add_annotation(
-        x=max_x_sqrt * 0.96, y=6, text="<b>DEMAND-LED</b><br><span style='font-size:9px;'>Jobs ≥ 5 • Repos &lt; 30</span>",
-        showarrow=False, align="right", xanchor="right",
-        font=dict(family="IBM Plex Mono", size=11, color="#1e40af")
+        x=max_x_sqrt * 0.98, y=2, text="<b>DEMAND-LED</b><br><span style='font-size:9px;'>Jobs ≥ 5 • Repos &lt; 30</span>",
+        showarrow=False, align="right", xanchor="right", yanchor="bottom",
+        font=dict(family="IBM Plex Mono", size=11, color="rgba(30, 64, 175, 0.7)")
     )
 
-    # Curated landmark technologies to label cleanly
-    landmark_names = {"Python", "SQL", "React", "LangChain", "Docker", "FastAPI", "Make", "C", "Java", "JavaScript"}
+    # Selected landmark technologies to label cleanly without visual crowding
+    landmark_names = {"Python", "SQL", "React", "LangChain", "Docker", "Make", "C", "Java"}
 
     signal_palette = {
         "THRIVING":   "#059669",
@@ -585,6 +639,20 @@ def build_quadrant_plot(
 
             show_label = is_sel or (not is_dimmed and name in landmark_names)
 
+            # Smart text positioning to prevent overlapping watermark or sibling points
+            if name == "Docker":
+                text_pos = "bottom right"
+            elif name == "FastAPI":
+                text_pos = "bottom left"
+            elif name == "SQL":
+                text_pos = "bottom left"
+            elif name == "LangChain":
+                text_pos = "bottom right"
+            elif y_val >= 75:
+                text_pos = "bottom right"
+            else:
+                text_pos = "top right"
+
             stars_txt = f"{row['gh_median_stars']/1000:.1f}K" if row["gh_median_stars"] >= 1000 else f"{int(row['gh_median_stars'])}"
 
             hover_text = (
@@ -609,7 +677,7 @@ def build_quadrant_plot(
                     )
                 ),
                 text=[name] if show_label else None,
-                textposition="top right",
+                textposition=text_pos,
                 textfont=dict(
                     family="IBM Plex Mono",
                     size=10,
@@ -654,7 +722,7 @@ def build_quadrant_plot(
             gridcolor="#ebebe5",
             gridwidth=1,
             griddash="dot",
-            range=[-2, 106],
+            range=[-2, 108],
             zeroline=False,
         ),
         hoverlabel=dict(
@@ -669,35 +737,42 @@ def build_quadrant_plot(
     return fig
 
 
-# ── Persistent Brand & Freshness Header (Header.tsx) ─────────────────────────
+# ── Prominent Global Header (Bigger, authoritative, clear) ───────────────────
 render_html(f"""
-<div style="background:#fbfbfa; border-bottom:1px solid #e5e5df; padding:10px 0; margin-bottom:12px;">
-  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
-    <div style="display:flex; align-items:center; gap:10px;">
-      <span style="display:inline-block; width:8px; height:8px; background:#171717; border-radius:2px;"></span>
-      <span style="font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:#171717;">
-        Labor Market Intelligence
-      </span>
-      <span style="color:#a3a39e; font-size:12px;">|</span>
-      <span style="font-size:11px; color:#575752;">
-        Technology demand vs developer ecosystem signals
-      </span>
+<div style="background:#fbfbfa; border-bottom:1px solid #e5e5df; padding:18px 0 16px 0; margin-bottom:16px;">
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+    <!-- Left: Prominent Brand Title & Subtitle -->
+    <div style="display:flex; align-items:center; gap:14px;">
+      <span style="display:inline-block; width:12px; height:12px; background:#171717; border-radius:3px; flex-shrink:0;"></span>
+      <div>
+        <div style="display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;">
+          <h1 style="font-family:'IBM Plex Mono',monospace; font-size:18px; font-weight:800; text-transform:uppercase; letter-spacing:0.08em; color:#171717; margin:0; line-height:1.2;">
+            Labor Market Intelligence
+          </h1>
+          <span style="color:#a3a39e; font-size:16px; font-weight:300;">|</span>
+          <span style="font-size:13px; font-weight:500; color:#575752;">
+            Technology demand vs developer ecosystem signals
+          </span>
+        </div>
+      </div>
     </div>
-    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; font-family:'IBM Plex Mono',monospace; font-size:11px;">
-      <div style="display:inline-flex; align-items:center; gap:6px; background:#f4f4f0; border:1px solid #e2e2dc; border-radius:3px; padding:2px 8px; color:#52524d;">
-        <span style="width:6px; height:6px; border-radius:50%; background:#059669;"></span>
+
+    <!-- Right: High-Visibility Freshness Badges -->
+    <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; font-family:'IBM Plex Mono',monospace; font-size:12px;">
+      <div style="display:inline-flex; align-items:center; gap:8px; background:#f4f4f0; border:1px solid #e2e2dc; border-radius:4px; padding:5px 12px; color:#52524d;">
+        <span style="width:8px; height:8px; border-radius:50%; background:#059669; flex-shrink:0;"></span>
         <span style="color:#73736c;">Adzuna:</span>
-        <strong style="color:#262624;">{ADZUNA_DATE}</strong>
+        <strong style="color:#171717;">{ADZUNA_DATE}</strong>
       </div>
-      <div style="display:inline-flex; align-items:center; gap:6px; background:#f4f4f0; border:1px solid #e2e2dc; border-radius:3px; padding:2px 8px; color:#52524d;">
-        <span style="width:6px; height:6px; border-radius:50%; background:#2563eb;"></span>
+      <div style="display:inline-flex; align-items:center; gap:8px; background:#f4f4f0; border:1px solid #e2e2dc; border-radius:4px; padding:5px 12px; color:#52524d;">
+        <span style="width:8px; height:8px; border-radius:50%; background:#2563eb; flex-shrink:0;"></span>
         <span style="color:#73736c;">GitHub:</span>
-        <strong style="color:#262624;">{GITHUB_DATE}</strong>
+        <strong style="color:#171717;">{GITHUB_DATE}</strong>
       </div>
-      <div style="display:inline-flex; align-items:center; gap:6px; background:#f4f4f0; border:1px solid #e2e2dc; border-radius:3px; padding:2px 8px; color:#52524d;">
-        <span style="width:6px; height:6px; border-radius:50%; background:#78716c;"></span>
+      <div style="display:inline-flex; align-items:center; gap:8px; background:#f4f4f0; border:1px solid #e2e2dc; border-radius:4px; padding:5px 12px; color:#52524d;">
+        <span style="width:8px; height:8px; border-radius:50%; background:#78716c; flex-shrink:0;"></span>
         <span style="color:#73736c;">Stack Overflow:</span>
-        <strong style="color:#262624;">2024</strong>
+        <strong style="color:#171717;">{SO_YEAR}</strong>
       </div>
     </div>
   </div>
@@ -728,7 +803,7 @@ with tab_overview:
         Technology demand vs developer ecosystem signals
       </h2>
       <p style="font-size:13px; color:#575752; max-width:860px; line-height:1.6; margin:0;">
-        Synthesizing <strong>{TOTAL_JOBS:,}</strong> observed IT employer job postings against Top-100 quality-classified GitHub repositories and 48K+ developer survey responses to distinguish genuine commercial hiring from ecosystem hype.
+        Synthesizing <strong>{TOTAL_JOBS:,}</strong> observed IT employer job postings against Top-100 quality-classified GitHub repositories and 48K+ developer survey responses (Stack Overflow {SO_YEAR}) to distinguish genuine commercial hiring from ecosystem hype.
       </p>
     </div>
     """)
@@ -752,11 +827,11 @@ with tab_overview:
         </div>
         """)
     with col3:
-        render_html("""
+        render_html(f"""
         <div class="kpi-block">
           <div class="kpi-num">48K+</div>
           <div class="kpi-title">Developer Responses</div>
-          <div class="kpi-sub">Stack Overflow baseline</div>
+          <div class="kpi-sub">Stack Overflow {SO_YEAR} baseline</div>
         </div>
         """)
     with col4:
@@ -1001,7 +1076,7 @@ with tab_explorer:
     render_html(f"""
     <div style="display:flex; justify-content:space-between; align-items:center; margin:10px 0 8px 0; font-family:'IBM Plex Mono',monospace; font-size:11px; color:#73736c;">
       <span>Showing <strong style="color:#171717;">{len(df_filtered_exp)}</strong> of {TOTAL_TECHS} technologies</span>
-      <span>Database mart: <code style="color:#171717;">fct_skill_signals</code></span>
+      <span>Database mart: <code style="background:#f0f0eb; color:#171717; border:1px solid #e2e2dc; padding:2px 6px; border-radius:3px;">fct_skill_signals</code></span>
     </div>
     """)
 
@@ -1168,7 +1243,7 @@ with tab_signalmap:
               {render_signal_badge(ins['composite_signal'], size='md')}
             </div>
             <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#73736c; margin-top:4px;">
-              Adzuna keyword: <code style="color:#171717;">{ins['adzuna_keyword']}</code>
+              Adzuna keyword: <code style="background:#f0f0eb; color:#171717; border:1px solid #e2e2dc; padding:2px 6px; border-radius:3px;">{ins['adzuna_keyword']}</code>
             </div>
           </div>
 
@@ -1254,13 +1329,13 @@ with tab_methodology:
 
     p1, p2, p3 = st.columns(3)
     with p1:
-        render_html("""
+        render_html(f"""
         <div style="background:white; border:1px solid #e5e5df; border-radius:4px; padding:16px; height:100%;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
             <strong style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#171717;">STACK OVERFLOW</strong>
             <span style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#73736c; background:#f4f4f0; padding:2px 6px; border-radius:2px;">Annual</span>
           </div>
-          <div style="font-size:13px; font-weight:600; color:#171717; margin-bottom:4px;">Annual Developer Survey</div>
+          <div style="font-size:13px; font-weight:600; color:#171717; margin-bottom:4px;">Annual Developer Survey ({SO_YEAR})</div>
           <p style="font-size:12px; color:#575752; line-height:1.6; margin:0;">
             48K+ global developer respondents establish the empirical developer adoption baseline and self-reported technology usage.
           </p>
@@ -1388,7 +1463,7 @@ with tab_methodology:
     """)
 
     # Section 3: Star Semantics
-    render_html("""
+    render_html(f"""
     <div style="max-width:1000px; margin-bottom:28px;">
       <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #ecece8; padding-bottom:8px; margin-bottom:14px;">
         <span style="font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#171717;">
@@ -1398,7 +1473,7 @@ with tab_methodology:
       </div>
 
       <div style="background:#fefce8; border:1px solid #fef08a; border-radius:4px; padding:14px; font-size:12px; color:#713f12; margin-bottom:14px; line-height:1.6;">
-        <strong style="color:#171717;">Core Analytical Principle:</strong> GitHub stars represent <strong>developer attention</strong> around sampled projects. They are <strong>not</strong> treated as a direct measure of technology adoption. Adoption is calibrated through employer requisitions (Adzuna) and developer survey responses (Stack Overflow).
+        <strong style="color:#171717;">Core Analytical Principle:</strong> GitHub stars represent <strong>developer attention</strong> around sampled projects. They are <strong>not</strong> treated as a direct measure of technology adoption. Adoption is calibrated through employer requisitions (Adzuna) and developer survey responses (Stack Overflow {SO_YEAR}).
       </div>
 
       <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:12px; font-family:'IBM Plex Mono',monospace; font-size:11px;">
@@ -1505,7 +1580,7 @@ with tab_methodology:
         5. Data Mart Schema &amp; Temporal Transparency
       </div>
       <p style="color:#575752; font-family:'Plus Jakarta Sans',sans-serif; margin:0 0 8px 0; line-height:1.6;">
-        The dashboard connects directly to the core dbt marts <code style="color:#171717; background:#e8e8e2; padding:2px 5px; border-radius:2px;">main_marts.fct_skill_signals</code> and <code style="color:#171717; background:#e8e8e2; padding:2px 5px; border-radius:2px;">main_marts.dim_technology</code>.
+        The dashboard connects directly to the core dbt marts <code style="background:#f0f0eb; color:#171717; border:1px solid #e2e2dc; padding:2px 6px; border-radius:3px;">main_marts.fct_skill_signals</code> and <code style="background:#f0f0eb; color:#171717; border:1px solid #e2e2dc; padding:2px 6px; border-radius:3px;">main_marts.dim_technology</code>.
       </p>
       <p style="color:#575752; font-family:'Plus Jakarta Sans',sans-serif; margin:0; line-height:1.6;">
         <strong>Temporal Transparency:</strong> Weekly job counts represent weekly observations from Adzuna IT extractions. GitHub metrics represent the latest monthly snapshot. The UI does not imply daily historical precision for GitHub where only monthly sampling was performed.
@@ -1523,7 +1598,7 @@ render_html(f"""
         Labor Market Intelligence &bull; Analytical Research Specification
       </div>
       <div style="font-size:11px; color:#85857e;">
-        Data Marts: <code style="color:#171717;">fct_skill_signals</code> &bull; <code style="color:#171717;">dim_technology</code> &bull; <code style="color:#171717;">fct_github_snapshots</code>
+        Data Marts: <code style="background:#f0f0eb; color:#171717; border:1px solid #e2e2dc; padding:2px 6px; border-radius:3px;">fct_skill_signals</code> &bull; <code style="background:#f0f0eb; color:#171717; border:1px solid #e2e2dc; padding:2px 6px; border-radius:3px;">dim_technology</code> &bull; <code style="background:#f0f0eb; color:#171717; border:1px solid #e2e2dc; padding:2px 6px; border-radius:3px;">fct_github_snapshots</code>
       </div>
     </div>
 
@@ -1532,7 +1607,7 @@ render_html(f"""
       <span>&bull;</span>
       <span>GitHub Snapshot: <strong style="color:#171717;">{GITHUB_DATE}</strong></span>
       <span>&bull;</span>
-      <span>Stack Overflow: <strong style="color:#171717;">2024</strong></span>
+      <span>Stack Overflow: <strong style="color:#171717;">{SO_YEAR}</strong></span>
     </div>
   </div>
 </div>
