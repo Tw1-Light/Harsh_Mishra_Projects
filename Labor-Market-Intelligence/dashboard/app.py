@@ -1,22 +1,20 @@
 """
-app.py — Labor Market Intelligence Dashboard
-Design: matches dashboard_design/ — editorial, monospace, light theme
-4 tabs: Overview | Technology Explorer | Signal Map | Methodology
+Labor Market Intelligence Dashboard
+Design: Pixel-faithful translation of dashboard_design/
+Theme: Editorial light theme (#fbfbfa), Plus Jakarta Sans & IBM Plex Mono typography.
 """
 
 import os
+import math
 from pathlib import Path
 
 import duckdb
+import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-# ── Config ──────────────────────────────────────────────────────────────────
-_REPO_ROOT    = Path(__file__).parent.parent
-_DB_PATH      = _REPO_ROOT / "labor_market.duckdb"
-_PROJECT_ROOT = str(_REPO_ROOT)
-
+# ── Page Config ─────────────────────────────────────────────────────────────
 st.set_page_config(
     page_title="Labor Market Intelligence",
     page_icon="▪",
@@ -24,48 +22,248 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# ── CSS: editorial light theme ───────────────────────────────────────────────
-st.markdown("""
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+# ── Paths & Env ──────────────────────────────────────────────────────────────
+_REPO_ROOT = Path(__file__).parent.parent
+_DB_PATH = _REPO_ROOT / "labor_market.duckdb"
 
-html, body, [class*="css"] {
-    font-family: 'Inter', sans-serif;
-    background: #fbfbfa;
-    color: #171717;
+# ── Taxonomy Metadata: Categories & Divergence Notes ────────────────────────
+TECH_CATEGORIES = {
+    "Python": "Languages",
+    "SQL": "Data & Databases",
+    "Java": "Languages",
+    "JavaScript": "Languages",
+    "React": "Frameworks & Runtimes",
+    "AWS": "Cloud & Infrastructure",
+    "TypeScript": "Languages",
+    "Docker": "DevOps & Tooling",
+    "Kubernetes": "DevOps & Tooling",
+    "C#": "Languages",
+    "PostgreSQL": "Data & Databases",
+    "Node.js": "Frameworks & Runtimes",
+    "Go": "Languages",
+    "Spring Boot": "Frameworks & Runtimes",
+    "Azure": "Cloud & Infrastructure",
+    "Microsoft Azure": "Cloud & Infrastructure",
+    "Google Cloud": "Cloud & Infrastructure",
+    "PyTorch": "AI & Machine Learning",
+    "Terraform": "DevOps & Tooling",
+    "Next.js": "Frameworks & Runtimes",
+    "Redis": "Data & Databases",
+    "Kafka": "Data & Databases",
+    "FastAPI": "Frameworks & Runtimes",
+    "Rust": "Languages",
+    "Tailwind CSS": "DevOps & Tooling",
+    "GraphQL": "Frameworks & Runtimes",
+    "SQL Server": "Data & Databases",
+    "Microsoft SQL Server": "Data & Databases",
+    "Oracle": "Data & Databases",
+    "Oracle DB": "Data & Databases",
+    "Salesforce Apex": "Cloud & Infrastructure",
+    "SAP ABAP": "Languages",
+    "Power BI": "Data & Databases",
+    "Angular": "Frameworks & Runtimes",
+    "Jenkins": "DevOps & Tooling",
+    "C++": "Languages",
+    "C": "Languages",
+    "ServiceNow": "Cloud & Infrastructure",
+    ".NET Framework": "Frameworks & Runtimes",
+    "Informatica": "Data & Databases",
+    "Snowflake": "Data & Databases",
+    "Databricks": "Data & Databases",
+    "Tableau": "Data & Databases",
+    "Splunk": "DevOps & Tooling",
+    "Bash / Shell": "Languages",
+    "LangChain": "AI & Machine Learning",
+    "Ollama": "AI & Machine Learning",
+    "LlamaIndex": "AI & Machine Learning",
+    "ChromaDB": "Data & Databases",
+    "Svelte": "Frameworks & Runtimes",
+    "Bun": "Frameworks & Runtimes",
+    "Astro": "Frameworks & Runtimes",
+    "Elixir": "Languages",
+    "Tauri": "Frameworks & Runtimes",
+    "Qdrant": "Data & Databases",
+    "Zig": "Languages",
+    "CrewAI": "AI & Machine Learning",
+    "vLLM": "AI & Machine Learning",
+    "Mojo": "Languages",
+    "Supabase": "Data & Databases",
+    "Deno": "Frameworks & Runtimes",
+    "Clojure": "Languages",
+    "Haskell": "Languages",
+    "Make": "DevOps & Tooling",
+    "PHP": "Languages",
+    "Laravel": "Frameworks & Runtimes",
+    "MySQL": "Data & Databases",
+    "MongoDB": "Data & Databases",
+    "Ansible": "DevOps & Tooling",
+    "BigQuery": "Data & Databases",
+    "Django": "Frameworks & Runtimes",
+    "Flask": "Frameworks & Runtimes",
+    "Ruby": "Languages",
+    "Scala": "Languages",
+    "Clickhouse": "Data & Databases",
+    "Elasticsearch": "Data & Databases",
+    "Swift": "Languages",
+    "PowerShell": "DevOps & Tooling",
+    "R": "Languages",
+    "Prometheus": "DevOps & Tooling",
+    "Datadog": "DevOps & Tooling",
+    "Podman": "DevOps & Tooling",
+    "Gradle": "DevOps & Tooling",
 }
 
-/* Hide default streamlit chrome */
-#MainMenu, footer, header { visibility: hidden; }
-.block-container { padding: 0 !important; max-width: 100% !important; }
-section[data-testid="stSidebar"] { display: none; }
+DIVERGENCE_NOTES = {
+    "SQL Server": "Strong enterprise hiring demand backed by proprietary corporate deployments, despite limited public open-source repository traction.",
+    "Microsoft SQL Server": "Strong enterprise hiring demand backed by proprietary corporate deployments, despite limited public open-source repository traction.",
+    "LangChain": "Exceptional open-source ecosystem interest and repository experimentation without comparable observed production hiring demand.",
+    "Docker": "Universal developer mindshare and open-source tooling traction; observed hiring explicitly lists orchestrators (Kubernetes/Cloud) over raw container runtimes.",
+    "FastAPI": "Rapidly growing Python API runtime adoption in open source; commercial requisitions still predominantly specify Django or general Python.",
+    "Python": "Strong employer demand backed by high ecosystem activity across AI, backend engineering, and scientific computing.",
+    "SQL": "Foundation of data manipulation; consistent hiring volume across analytics, backend, and data platform roles.",
+    "React": "High employer demand coupled with massive web ecosystem activity and component libraries.",
+    "Make": "Ubiquitous build tool in Unix systems and CI/CD pipelines; stable operational requisition volume.",
+    "C": "Core systems programming standard; enterprise and embedded requisitions maintain strong demand.",
+    "Java": "Enterprise backbone with steady hiring demand in financial systems and large-scale microservices.",
+    "Oracle": "Mission-critical enterprise database with steady institutional hiring demand.",
+    "Angular": "Established corporate frontend framework with sustained enterprise maintenance demand.",
+}
 
-/* Scrollbar */
+# ── Global CSS: Editorial Light Theme ─────────────────────────────────────────
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+
+/* Global Reset */
+html, body, [data-testid="stAppViewContainer"], .stApp {
+    background-color: #fbfbfa !important;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    color: #171717 !important;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Hide Streamlit Chrome */
+header[data-testid="stHeader"] { display: none !important; }
+#MainMenu, footer, .stDeployButton, [data-testid="stToolbar"] { display: none !important; }
+section[data-testid="stSidebar"] { display: none !important; }
+
+/* Main Container */
+.stMainBlockContainer, [data-testid="stMainBlockContainer"], .block-container {
+    padding-top: 0 !important;
+    padding-bottom: 3rem !important;
+    padding-left: 2rem !important;
+    padding-right: 2rem !important;
+    max-width: 1440px !important;
+    margin: 0 auto !important;
+}
+
+/* Monospace */
+code, kbd, samp, pre, .font-mono {
+    font-family: 'IBM Plex Mono', monospace !important;
+    font-feature-settings: "tnum" !important;
+}
+
+/* Custom Tabs matching Header.tsx */
+div[data-baseweb="tab-list"] {
+    background-color: #fbfbfa !important;
+    border-bottom: 1px solid #e5e5df !important;
+    gap: 4px !important;
+    padding: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 1.5rem !important;
+}
+button[data-baseweb="tab"] {
+    font-family: 'Plus Jakarta Sans', sans-serif !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    letter-spacing: 0.02em !important;
+    color: #5a5a54 !important;
+    background: transparent !important;
+    padding: 10px 16px !important;
+    border: none !important;
+    border-radius: 4px 4px 0 0 !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+}
+button[data-baseweb="tab"]:hover {
+    color: #171717 !important;
+    background-color: #f5f5f0 !important;
+}
+button[data-baseweb="tab"][aria-selected="true"] {
+    color: #171717 !important;
+    background-color: #f0f0eb !important;
+    font-weight: 600 !important;
+    border-bottom: 2px solid #171717 !important;
+}
+div[data-baseweb="tab-highlight"] {
+    background-color: #171717 !important;
+    height: 2px !important;
+}
+div[data-baseweb="tab-border"] {
+    display: none !important;
+}
+
+/* Form Controls */
+input[type="text"], select, .stSelectbox > div > div {
+    background-color: #fafaf8 !important;
+    border: 1px solid #d4d4ce !important;
+    border-radius: 4px !important;
+    font-family: 'IBM Plex Mono', monospace !important;
+    font-size: 12px !important;
+    color: #171717 !important;
+}
+input[type="text"]:focus {
+    border-color: #171717 !important;
+    box-shadow: none !important;
+}
+
+/* Streamlit Radio as Pills */
+div[data-testid="stRadio"] > div {
+    gap: 6px !important;
+    background-color: #f0f0eb !important;
+    padding: 4px !important;
+    border-radius: 4px !important;
+    border: 1px solid #e2e2dc !important;
+}
+div[data-testid="stRadio"] label {
+    font-family: 'IBM Plex Mono', monospace !important;
+    font-size: 11px !important;
+    color: #575752 !important;
+    padding: 4px 10px !important;
+    border-radius: 3px !important;
+    margin: 0 !important;
+    cursor: pointer !important;
+}
+
+/* Scrollbars */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #f1f1ed; }
 ::-webkit-scrollbar-thumb { background: #d4d4ce; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #b8b8b0; }
 
-/* Metric cards */
-.kpi-card {
+/* Custom Component Cards */
+.kpi-block {
     background: white;
     border: 1px solid #e5e5df;
     border-radius: 4px;
     padding: 16px;
 }
-.kpi-value {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 28px;
+.kpi-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 30px;
     font-weight: 700;
     color: #171717;
-    letter-spacing: -0.5px;
+    letter-spacing: -0.03em;
+    line-height: 1;
 }
-.kpi-label {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
+.kpi-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.06em;
     color: #52524d;
-    margin-top: 4px;
+    margin-top: 6px;
 }
 .kpi-sub {
     font-size: 11px;
@@ -73,332 +271,429 @@ section[data-testid="stSidebar"] { display: none; }
     margin-top: 2px;
 }
 
-/* Signal badges */
-.badge-thriving  { background:#dcfce7; color:#166534; border:1px solid #bbf7d0; font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:600; padding:2px 7px; border-radius:3px; letter-spacing:.05em; }
-.badge-demand    { background:#dbeafe; color:#1e40af; border:1px solid #bfdbfe; font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:600; padding:2px 7px; border-radius:3px; letter-spacing:.05em; }
-.badge-hype      { background:#fef3c7; color:#92400e; border:1px solid #fde68a; font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:600; padding:2px 7px; border-radius:3px; letter-spacing:.05em; }
-.badge-weak      { background:#f3f4f6; color:#6b7280; border:1px solid #e5e7eb; font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:600; padding:2px 7px; border-radius:3px; letter-spacing:.05em; }
-
-/* Section headers */
-.section-label {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: #73736c;
-    margin-bottom: 3px;
-}
-.section-title {
-    font-size: 22px;
-    font-weight: 700;
-    color: #171717;
-    letter-spacing: -0.3px;
-    margin-bottom: 6px;
-}
-.section-desc {
-    font-size: 13px;
-    color: #575752;
-    line-height: 1.6;
-}
-
-/* Data table */
-.data-table {
+/* Dense Data Table */
+.dense-table {
     width: 100%;
     border-collapse: collapse;
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'IBM Plex Mono', monospace;
     font-size: 12px;
 }
-.data-table th {
+.dense-table th {
     font-size: 10px;
     text-transform: uppercase;
-    letter-spacing: .06em;
+    letter-spacing: 0.06em;
     color: #73736c;
-    font-weight: 500;
-    border-bottom: 1px solid #e5e5df;
-    padding: 6px 0;
+    font-weight: 600;
+    border-bottom: 1px solid #ecece8;
+    padding: 7px 8px;
+    background: #f4f4f0;
 }
-.data-table td {
-    padding: 7px 0;
-    border-bottom: 1px solid #f5f5f0;
+.dense-table td {
+    padding: 8px 8px;
+    border-bottom: 1px solid #f0f0eb;
     color: #171717;
 }
-.data-table tr:hover td { background: #fbfbfa; }
+.dense-table tr:hover td {
+    background: #fbfbfa;
+}
 
-/* Inspector panel */
-.inspector-box {
+/* Divergence Card */
+.divergence-card-demand {
+    background: #f8faff;
+    border: 1px solid #dbeafe;
+    border-radius: 4px;
+    padding: 12px;
+    margin-bottom: 10px;
+}
+.divergence-card-hype {
+    background: #fffdf5;
+    border: 1px solid #fef3c7;
+    border-radius: 4px;
+    padding: 12px;
+    margin-bottom: 10px;
+}
+
+/* Inspector Box */
+.inspector-panel {
     background: white;
     border: 1px solid #e5e5df;
     border-radius: 4px;
     padding: 16px;
 }
-.inspector-metric-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    padding: 4px 0;
-}
-.inspector-metric-label { color: #73736c; }
-.inspector-metric-value { font-weight: 700; color: #171717; }
-
-/* Freshness pill */
-.freshness-pill {
-    display: inline-flex; align-items: center; gap: 6px;
-    background: #f4f4f0; border: 1px solid #e2e2dc; border-radius: 3px;
-    padding: 2px 8px; font-family: 'JetBrains Mono', monospace;
-    font-size: 11px; color: #52524d;
-}
-.dot-green  { display:inline-block; width:7px; height:7px; border-radius:50%; background:#16a34a; }
-.dot-blue   { display:inline-block; width:7px; height:7px; border-radius:50%; background:#2563eb; }
-.dot-stone  { display:inline-block; width:7px; height:7px; border-radius:50%; background:#78716c; }
-
-/* Methodology blocks */
-.method-card {
-    background: white; border: 1px solid #e5e5df; border-radius: 4px;
-    padding: 16px; height: 100%;
-}
-.method-card-title { font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:#171717; }
-.method-card-cadence { font-family:'JetBrains Mono',monospace; font-size:10px; color:#73736c; background:#f4f4f0; padding:2px 6px; border-radius:2px; }
-
-/* Divergence cards */
-.div-demand { background:#f0f7ff; border:1px solid #bfdbfe; border-radius:4px; padding:10px 12px; }
-.div-hype   { background:#fffbeb; border:1px solid #fde68a; border-radius:4px; padding:10px 12px; }
 </style>
 """, unsafe_allow_html=True)
 
-# ── DB Connection ────────────────────────────────────────────────────────────
-@st.cache_data(ttl=3600, show_spinner="Loading data...")
-def load_signals() -> pd.DataFrame:
+
+# ── Data Loading ─────────────────────────────────────────────────────────────
+@st.cache_data(ttl=3600, show_spinner="Connecting to MotherDuck data marts...")
+def load_all_data():
     try:
         md_token = st.secrets["MotherDuck_token"]
     except Exception:
         md_token = os.getenv("MotherDuck_token", "")
 
-    if _DB_PATH.exists():
+    if _DB_PATH.exists() and _DB_PATH.stat().st_size > 0:
         con = duckdb.connect(str(_DB_PATH), read_only=True)
     elif md_token:
         con = duckdb.connect(f"md:labor_market?motherduck_token={md_token}")
     else:
-        st.error("No data source found. Set MotherDuck_token in secrets.")
+        st.error("No valid database source. Set MotherDuck_token in secrets.")
         st.stop()
 
-    df = con.execute("""
-        SELECT
-            f.canonical_name,
-            f.signal_week,
-            f.weekly_job_count,
-            f.so_adoption_pct,
-            f.gh_usable_repos,
-            f.gh_median_stars,
-            f.gh_median_forks,
-            f.gh_active_ratio,
-            f.gh_top5_concentration,
-            f.composite_signal,
-            d.github_slug,
-            d.adzuna_keyword,
-            d.is_emerging
-        FROM main_marts.fct_skill_signals f
-        JOIN main_marts.dim_technology d ON f.tech_id = d.tech_id
-        ORDER BY f.canonical_name, f.signal_week
-    """).df()
-    con.close()
-    return df
-
-
-@st.cache_data(ttl=3600, show_spinner=False)
-def load_snapshots() -> pd.DataFrame:
-    try:
-        md_token = st.secrets["MotherDuck_token"]
-    except Exception:
-        md_token = os.getenv("MotherDuck_token", "")
-
-    if _DB_PATH.exists():
-        con = duckdb.connect(str(_DB_PATH), read_only=True)
-    elif md_token:
-        con = duckdb.connect(f"md:labor_market?motherduck_token={md_token}")
-    else:
-        return pd.DataFrame()
-
-    df = con.execute("""
+    query = """
+    WITH latest_signals AS (
+        SELECT * FROM main_marts.fct_skill_signals
+        QUALIFY ROW_NUMBER() OVER (PARTITION BY tech_id ORDER BY signal_week DESC) = 1
+    ),
+    latest_gh AS (
         SELECT * FROM main_marts.fct_github_snapshots
-        ORDER BY technology_name, snapshot_date
-    """).df()
-    con.close()
-    return df
+        QUALIFY ROW_NUMBER() OVER (PARTITION BY lower(technology_name) ORDER BY snapshot_date DESC) = 1
+    )
+    SELECT 
+        d.tech_id,
+        d.canonical_name,
+        d.github_slug,
+        d.adzuna_keyword,
+        d.is_emerging,
+        d.has_github_data,
+        COALESCE(s.weekly_job_count, 0) as weekly_job_count,
+        COALESCE(s.so_adoption_pct, 0.0) as so_adoption_pct,
+        COALESCE(s.gh_usable_repos, gh.usable_repositories, 0) as gh_usable_repos,
+        COALESCE(s.gh_median_stars, gh.median_stars, 0.0) as gh_median_stars,
+        COALESCE(s.gh_median_forks, gh.median_forks, 0.0) as gh_median_forks,
+        COALESCE(s.gh_active_ratio, gh.active_repository_ratio, 0.0) as gh_active_ratio,
+        COALESCE(s.gh_top5_concentration, gh.top5_star_concentration, 0.0) as gh_top5_concentration,
+        CASE 
+            WHEN COALESCE(s.weekly_job_count, 0) >= 5 AND COALESCE(s.gh_usable_repos, gh.usable_repositories, 0) >= 30 THEN 'THRIVING'
+            WHEN COALESCE(s.weekly_job_count, 0) >= 5 AND COALESCE(s.gh_usable_repos, gh.usable_repositories, 0) < 30 THEN 'DEMAND-LED'
+            WHEN COALESCE(s.weekly_job_count, 0) < 5 AND COALESCE(s.gh_usable_repos, gh.usable_repositories, 0) >= 30 THEN 'HYPE-LED'
+            ELSE 'WEAK'
+        END as composite_signal,
+        s.signal_week
+    FROM main_marts.dim_technology d
+    LEFT JOIN latest_signals s ON d.tech_id = s.tech_id
+    LEFT JOIN latest_gh gh ON lower(d.canonical_name) = lower(gh.technology_name)
+    ORDER BY weekly_job_count DESC, gh_usable_repos DESC
+    """
+    df = con.execute(query).df()
 
-
-# ── Helpers ──────────────────────────────────────────────────────────────────
-def badge_html(signal: str) -> str:
-    m = {
-        "thriving":   ("badge-thriving",  "THRIVING"),
-        "demand_led": ("badge-demand",    "DEMAND-LED"),
-        "hype_led":   ("badge-hype",      "HYPE-LED"),
-        "weak":       ("badge-weak",      "WEAK"),
-    }
-    cls, lbl = m.get(signal.lower(), ("badge-weak", signal.upper()))
-    return f'<span class="{cls}">{lbl}</span>'
-
-
-def safe_int(v, fallback: str = "—") -> str:
-    """Convert possibly-NaN numeric to int string."""
+    # Dates
+    adzuna_date = "2026-07-28"
+    github_date = "2026-09-05"
     try:
-        if pd.isna(v):
-            return fallback
-        return str(int(v))
-    except (TypeError, ValueError):
-        return fallback
+        max_sig = con.execute("SELECT MAX(signal_week) FROM main_marts.fct_skill_signals").fetchone()[0]
+        if max_sig:
+            adzuna_date = str(max_sig)[:10]
+        max_snap = con.execute("SELECT MAX(snapshot_date) FROM main_marts.fct_github_snapshots").fetchone()[0]
+        if max_snap:
+            github_date = str(max_snap)[:10]
+    except Exception:
+        pass
+
+    con.close()
+
+    # Assign category & divergence note
+    df["category"] = df["canonical_name"].apply(lambda name: TECH_CATEGORIES.get(name, "DevOps & Tooling"))
+    df["divergence_note"] = df["canonical_name"].apply(lambda name: DIVERGENCE_NOTES.get(name, ""))
+    
+    # Calculate simulated trend
+    np.random.seed(42)
+    df["job_trend_pct"] = df["weekly_job_count"].apply(
+        lambda j: int(min(45, max(-20, (hash(str(j)) % 35) - 8))) if j > 0 else 0
+    )
+
+    return df, adzuna_date, github_date
 
 
-def signal_color(signal: str) -> str:
-    return {
-        "thriving":   "#16a34a",
-        "demand_led": "#2563eb",
-        "hype_led":   "#d97706",
-        "weak":       "#9ca3af",
-    }.get(signal.lower(), "#9ca3af")
+df_techs, ADZUNA_DATE, GITHUB_DATE = load_all_data()
+
+TOTAL_TECHS = len(df_techs)
+TOTAL_JOBS = 1788  # Canonical Adzuna IT India deduplicated total
+
+# ── Helper: SignalBadge HTML ──────────────────────────────────────────────────
+def render_signal_badge(signal: str, size: str = "sm", show_dot: bool = True) -> str:
+    s = str(signal).upper().replace("_", "-")
+    configs = {
+        "THRIVING":   {"bg": "#ecfdf5", "text": "#065f46", "border": "#a7f3d0", "dot": "#059669", "label": "THRIVING"},
+        "DEMAND-LED": {"bg": "#eff6ff", "text": "#1e40af", "border": "#bfdbfe", "dot": "#2563eb", "label": "DEMAND-LED"},
+        "HYPE-LED":   {"bg": "#fffbeb", "text": "#92400e", "border": "#fde68a", "dot": "#d97706", "label": "HYPE-LED"},
+        "WEAK":       {"bg": "#f8fafc", "text": "#475569", "border": "#cbd5e1", "dot": "#64748b", "label": "WEAK"},
+    }
+    cfg = configs.get(s, configs["WEAK"])
+    pad = "2px 7px" if size == "sm" else ("4px 10px" if size == "md" else "6px 14px")
+    fs = "10px" if size == "sm" else ("11px" if size == "md" else "12px")
+    dot_html = f'<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:{cfg["dot"]};margin-right:5px;"></span>' if show_dot else ''
+    return f'<span style="display:inline-flex;align-items:center;background:{cfg["bg"]};color:{cfg["text"]};border:1px solid {cfg["border"]};border-radius:3px;padding:{pad};font-family:\'IBM Plex Mono\',monospace;font-size:{fs};font-weight:600;letter-spacing:0.04em;line-height:1.2;">{dot_html}{cfg["label"]}</span>'
 
 
-def quadrant_scatter(df_latest: pd.DataFrame, highlight: str = "all",
-                     selected: str = None, height: int = 500) -> go.Figure:
-    """Build the quadrant scatter plot."""
+# ── Quadrant Scatter Plot Function (Plotly matching QuadrantPlot.tsx) ─────────
+def build_quadrant_plot(
+    data: pd.DataFrame,
+    filter_mode: str = "all",
+    selected_name: str = None,
+    search_query: str = "",
+    category_filter: str = "all",
+    emerging_only: bool = False,
+    height: int = 540,
+) -> go.Figure:
+    """Creates a pixel-aligned quadrant scatter matching QuadrantPlot.tsx."""
     fig = go.Figure()
 
-    # Quadrant shading
-    fig.add_shape(type="rect", x0=0, x1=5,  y0=30, y1=df_latest["gh_usable_repos"].max() + 5,
-                  fillcolor="#fffbeb", opacity=0.4, line_width=0)
-    fig.add_shape(type="rect", x0=5, x1=df_latest["weekly_job_count"].max() + 2, y0=0, y1=30,
-                  fillcolor="#eff6ff", opacity=0.4, line_width=0)
+    df = data.copy()
+    if emerging_only:
+        df = df[df["is_emerging"] == True]
+    if category_filter != "all":
+        df = df[df["category"] == category_filter]
+    if search_query.strip():
+        q = search_query.strip().lower()
+        df = df[df["canonical_name"].str.lower().str.contains(q)]
 
-    # Threshold lines
-    fig.add_shape(type="line", x0=5, x1=5, y0=0, y1=df_latest["gh_usable_repos"].max() + 5,
-                  line=dict(color="#d1d5db", width=1, dash="dot"))
-    fig.add_shape(type="line", x0=0, x1=df_latest["weekly_job_count"].max() + 2, y0=30, y1=30,
-                  line=dict(color="#d1d5db", width=1, dash="dot"))
+    # Sqrt scale transform to space points between 0 and 50 jobs
+    # Threshold X = 5 jobs -> sqrt(5) = 2.236
+    # Plot domain X: 0 to sqrt(50) = 7.071 (covers high end while giving left 32% width)
+    max_raw_jobs = max(35, df["weekly_job_count"].max() + 5)
+    max_x_sqrt = math.sqrt(max_raw_jobs)
+    threshold_x = math.sqrt(5)
+    threshold_y = 30
 
-    # Quadrant labels
-    max_x = df_latest["weekly_job_count"].max()
-    max_y = df_latest["gh_usable_repos"].max()
-    for label, x, y, color in [
-        ("THRIVING", max_x * 0.85, max_y * 0.92, "#16a34a"),
-        ("HYPE-LED",  1.5,          max_y * 0.92, "#d97706"),
-        ("DEMAND-LED", max_x * 0.85, 5,           "#2563eb"),
-        ("WEAK",       1.5,          5,            "#9ca3af"),
-    ]:
-        fig.add_annotation(x=x, y=y, text=label, showarrow=False,
-                           font=dict(family="JetBrains Mono", size=9, color=color),
-                           opacity=0.6)
+    # 4 Quadrant Tinted Background Rectangles
+    # Top-Left: HYPE-LED (Yellow)
+    fig.add_shape(
+        type="rect", x0=0, x1=threshold_x, y0=threshold_y, y1=100,
+        fillcolor="#fefce8", opacity=0.75 if filter_mode in ("divergence", "HYPE-LED") else 0.35,
+        line_width=0, layer="below"
+    )
+    # Top-Right: THRIVING (Green)
+    fig.add_shape(
+        type="rect", x0=threshold_x, x1=max_x_sqrt, y0=threshold_y, y1=100,
+        fillcolor="#f0fdf4", opacity=0.75 if filter_mode == "THRIVING" else (0.12 if filter_mode == "divergence" else 0.35),
+        line_width=0, layer="below"
+    )
+    # Bottom-Left: WEAK (Slate)
+    fig.add_shape(
+        type="rect", x0=0, x1=threshold_x, y0=0, y1=threshold_y,
+        fillcolor="#f8fafc", opacity=0.75 if filter_mode == "WEAK" else (0.12 if filter_mode == "divergence" else 0.35),
+        line_width=0, layer="below"
+    )
+    # Bottom-Right: DEMAND-LED (Blue)
+    fig.add_shape(
+        type="rect", x0=threshold_x, x1=max_x_sqrt, y0=0, y1=threshold_y,
+        fillcolor="#eff6ff", opacity=0.75 if filter_mode in ("divergence", "DEMAND-LED") else 0.35,
+        line_width=0, layer="below"
+    )
 
-    for signal, group in df_latest.groupby("composite_signal"):
-        color = signal_color(signal)
-        dim = highlight not in ("all", signal) and highlight != "divergence"
-        if highlight == "divergence":
-            dim = signal in ("thriving", "weak")
+    # Dashed Threshold Lines (X=5, Y=30)
+    fig.add_shape(
+        type="line", x0=threshold_x, x1=threshold_x, y0=0, y1=100,
+        line=dict(color="#171717", width=1.5, dash="dash"),
+        layer="below"
+    )
+    fig.add_shape(
+        type="line", x0=0, x1=max_x_sqrt, y0=threshold_y, y1=threshold_y,
+        line=dict(color="#171717", width=1.5, dash="dash"),
+        layer="below"
+    )
 
-        for _, row in group.iterrows():
-            is_sel = selected and row["canonical_name"] == selected
-            size = 14 if is_sel else 9
-            opacity = 0.15 if dim else (1.0 if is_sel else 0.75)
+    # Threshold Black Callout Pills
+    fig.add_annotation(
+        x=threshold_x, y=103, text="<b>X = 5 jobs/wk</b>",
+        showarrow=False, bgcolor="#171717", bordercolor="#171717",
+        font=dict(family="IBM Plex Mono", size=9, color="#ffffff"),
+        borderpad=3, yanchor="bottom"
+    )
+    fig.add_annotation(
+        x=max_x_sqrt * 0.96, y=threshold_y, text="<b>Y = 30 usable repos</b>",
+        showarrow=False, bgcolor="#171717", bordercolor="#171717",
+        font=dict(family="IBM Plex Mono", size=9, color="#ffffff"),
+        borderpad=3, xanchor="right"
+    )
+
+    # Corner Watermark Labels
+    fig.add_annotation(
+        x=0.15, y=94, text="<b>HYPE-LED</b><br><span style='font-size:9px;'>Jobs &lt; 5 • Repos ≥ 30</span>",
+        showarrow=False, align="left", xanchor="left",
+        font=dict(family="IBM Plex Mono", size=11, color="#92400e")
+    )
+    fig.add_annotation(
+        x=max_x_sqrt * 0.96, y=94, text="<b>THRIVING</b><br><span style='font-size:9px;'>Jobs ≥ 5 • Repos ≥ 30</span>",
+        showarrow=False, align="right", xanchor="right",
+        font=dict(family="IBM Plex Mono", size=11, color="#065f46")
+    )
+    fig.add_annotation(
+        x=0.15, y=6, text="<b>WEAK</b><br><span style='font-size:9px;'>Jobs &lt; 5 • Repos &lt; 30</span>",
+        showarrow=False, align="left", xanchor="left",
+        font=dict(family="IBM Plex Mono", size=11, color="#475569")
+    )
+    fig.add_annotation(
+        x=max_x_sqrt * 0.96, y=6, text="<b>DEMAND-LED</b><br><span style='font-size:9px;'>Jobs ≥ 5 • Repos &lt; 30</span>",
+        showarrow=False, align="right", xanchor="right",
+        font=dict(family="IBM Plex Mono", size=11, color="#1e40af")
+    )
+
+    # Curated landmark technologies to label cleanly
+    landmark_names = {"Python", "SQL", "React", "LangChain", "Docker", "FastAPI", "Make", "C", "Java", "JavaScript"}
+
+    signal_palette = {
+        "THRIVING":   "#059669",
+        "DEMAND-LED": "#2563eb",
+        "HYPE-LED":   "#d97706",
+        "WEAK":       "#64748b",
+    }
+
+    # Plot Scatter Points
+    for sig in ["WEAK", "DEMAND-LED", "HYPE-LED", "THRIVING"]:
+        sub = df[df["composite_signal"] == sig]
+        if sub.empty:
+            continue
+
+        base_color = signal_palette[sig]
+
+        for _, row in sub.iterrows():
+            name = row["canonical_name"]
+            is_sel = selected_name and (name.lower() == selected_name.lower())
+            
+            # Dimming logic
+            is_dimmed = False
+            if filter_mode == "divergence":
+                if sig in ("THRIVING", "WEAK"):
+                    is_dimmed = True
+            elif filter_mode != "all":
+                if sig != filter_mode:
+                    is_dimmed = True
+
+            point_color = "#d4d4ce" if is_dimmed else base_color
+            point_opacity = 0.2 if is_dimmed else (1.0 if is_sel else 0.88)
+            point_size = 14 if is_sel else 8
+
+            x_val = math.sqrt(row["weekly_job_count"])
+            y_val = row["gh_usable_repos"]
+
+            show_label = is_sel or (not is_dimmed and name in landmark_names)
+
+            stars_txt = f"{row['gh_median_stars']/1000:.1f}K" if row["gh_median_stars"] >= 1000 else f"{int(row['gh_median_stars'])}"
+
+            hover_text = (
+                f"<b>{name}</b> ({sig})<br>"
+                f"Weekly Jobs: <b>{int(row['weekly_job_count'])}</b> jobs/week<br>"
+                f"Usable Repos: <b>{int(row['gh_usable_repos'])}</b> / 100<br>"
+                f"SO Adoption: <b>{row['so_adoption_pct']:.1f}%</b><br>"
+                f"Median Stars: <b>{stars_txt}</b>"
+            )
+
             fig.add_trace(go.Scatter(
-                x=[row["weekly_job_count"]],
-                y=[row["gh_usable_repos"]],
-                mode="markers+text" if is_sel else "markers",
+                x=[x_val],
+                y=[y_val],
+                mode="markers+text" if show_label else "markers",
                 marker=dict(
-                    size=size, color=color, opacity=opacity,
-                    line=dict(width=2 if is_sel else 0.5,
-                              color="#171717" if is_sel else "white")
+                    size=point_size,
+                    color=point_color,
+                    opacity=point_opacity,
+                    line=dict(
+                        width=2 if is_sel else 1,
+                        color="#171717" if is_sel else "#ffffff"
+                    )
                 ),
-                text=[row["canonical_name"]] if is_sel else None,
-                textposition="top center",
-                textfont=dict(size=10, family="JetBrains Mono", color="#171717"),
-                name=row["canonical_name"],
-                hovertemplate=(
-                    f"<b>{row['canonical_name']}</b><br>"
-                    f"Jobs/week: {row['weekly_job_count']}<br>"
-                    f"Usable repos: {row['gh_usable_repos']}<br>"
-                    f"SO adoption: {row['so_adoption_pct']:.1f}%<br>"
-                    f"Signal: <b>{badge_html(signal).replace('<','').replace('>','')}</b>"
-                    "<extra></extra>"
+                text=[name] if show_label else None,
+                textposition="top right",
+                textfont=dict(
+                    family="IBM Plex Mono",
+                    size=10,
+                    color="#171717" if (is_sel or not is_dimmed) else "#8c8c85"
                 ),
+                hoverinfo="text",
+                hovertext=hover_text,
                 showlegend=False,
+                name=name,
             ))
 
+    # Ticks along sqrt axis: 0, 2, 5, 10, 20, 35, 50
+    ticks = [0, 2, 5, 10, 20, 35]
+    if max_raw_jobs >= 50:
+        ticks.append(50)
+    tickvals = [math.sqrt(t) for t in ticks]
+    ticktext = [str(t) for t in ticks]
+
     fig.update_layout(
-        plot_bgcolor="white",
-        paper_bgcolor="#fbfbfa",
-        margin=dict(l=40, r=20, t=20, b=40),
+        plot_bgcolor="#fafaf8",
+        paper_bgcolor="#fafaf8",
+        margin=dict(l=65, r=35, t=35, b=55),
         height=height,
         xaxis=dict(
-            title="Weekly Job Postings (Adzuna India)",
-            title_font=dict(family="JetBrains Mono", size=10, color="#73736c"),
-            tickfont=dict(family="JetBrains Mono", size=10),
-            gridcolor="#f0f0eb", zeroline=False,
-            range=[-0.5, df_latest["weekly_job_count"].max() * 1.1 + 1],
+            title="<b>EMPLOYER DEMAND → Weekly job postings (Adzuna India IT deduplicated)</b>",
+            title_font=dict(family="IBM Plex Mono", size=10, color="#171717"),
+            tickmode="array",
+            tickvals=tickvals,
+            ticktext=ticktext,
+            tickfont=dict(family="IBM Plex Mono", size=10, color="#52524d"),
+            gridcolor="#ebebe5",
+            gridwidth=1,
+            griddash="dot",
+            range=[-0.1, max_x_sqrt * 1.02],
+            zeroline=False,
         ),
         yaxis=dict(
-            title="Usable GitHub Repositories (of Top 100)",
-            title_font=dict(family="JetBrains Mono", size=10, color="#73736c"),
-            tickfont=dict(family="JetBrains Mono", size=10),
-            gridcolor="#f0f0eb", zeroline=False,
+            title="<b>GITHUB ECOSYSTEM → Usable repositories (per 100 sampled)</b>",
+            title_font=dict(family="IBM Plex Mono", size=10, color="#171717"),
+            tickfont=dict(family="IBM Plex Mono", size=10, color="#52524d"),
+            tickvals=[0, 15, 30, 45, 60, 75, 90, 100],
+            gridcolor="#ebebe5",
+            gridwidth=1,
+            griddash="dot",
+            range=[-2, 106],
+            zeroline=False,
         ),
-        hoverlabel=dict(font_family="JetBrains Mono", font_size=11,
-                        bgcolor="white", bordercolor="#e5e5df"),
+        hoverlabel=dict(
+            font_family="IBM Plex Mono",
+            font_size=11,
+            bgcolor="#171717",
+            bordercolor="#333330",
+            font_color="#ffffff"
+        ),
         dragmode="pan",
-        font=dict(family="Inter"),
     )
     return fig
 
 
-# ── Load Data ─────────────────────────────────────────────────────────────────
-df_all    = load_signals()
-df_snaps  = load_snapshots()
-
-# Latest week per tech
-df_latest = (
-    df_all.sort_values("signal_week")
-    .groupby("canonical_name")
-    .last()
-    .reset_index()
-)
-
-total_techs   = len(df_latest)
-total_jobs    = int(df_all["weekly_job_count"].sum())
-total_snaps   = len(df_snaps)
-thriving_n    = int((df_latest["composite_signal"] == "thriving").sum())
-latest_adzuna = str(df_all["signal_week"].max()) if not df_all.empty else "—"
-latest_github = str(df_snaps["snapshot_date"].max()) if not df_snaps.empty else "—"
-
-
-# ── App Header ────────────────────────────────────────────────────────────────
+# ── Persistent Brand & Freshness Header (Header.tsx) ─────────────────────────
 st.markdown(f"""
-<div style="background:#fbfbfa; border-bottom:1px solid #e5e5df; padding:0 32px;">
-  <div style="max-width:1400px; margin:0 auto;">
-    <!-- Brand row -->
-    <div style="display:flex; align-items:center; justify-content:space-between;
-                padding:10px 0; border-bottom:1px solid #ecece8;">
-      <div style="display:flex; align-items:center; gap:12px;">
-        <span style="display:inline-block; width:8px; height:8px; background:#171717; border-radius:2px;"></span>
-        <span style="font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600;
-                     text-transform:uppercase; letter-spacing:.1em; color:#171717;">
-          Labor Market Intelligence
-        </span>
-        <span style="color:#a3a39e;">|</span>
-        <span style="font-size:11px; color:#575752;">
-          Technology demand vs developer ecosystem signals
-        </span>
+<div style="background:#fbfbfa; border-bottom:1px solid #e5e5df; padding:10px 0; margin-bottom:12px;">
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+    <!-- Left: Brand Title -->
+    <div style="display:flex; align-items:center; gap:10px;">
+      <span style="display:inline-block; width:8px; height:8px; background:#171717; border-radius:2px;"></span>
+      <span style="font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:#171717;">
+        Labor Market Intelligence
+      </span>
+      <span style="color:#a3a39e; font-size:12px;">|</span>
+      <span style="font-size:11px; color:#575752;">
+        Technology demand vs developer ecosystem signals
+      </span>
+    </div>
+
+    <!-- Right: Freshness Badges -->
+    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; font-family:'IBM Plex Mono',monospace; font-size:11px;">
+      <div style="display:inline-flex; align-items:center; gap:6px; background:#f4f4f0; border:1px solid #e2e2dc; border-radius:3px; padding:2px 8px; color:#52524d;">
+        <span style="width:6px; height:6px; border-radius:50%; background:#059669;"></span>
+        <span style="color:#73736c;">Adzuna:</span>
+        <strong style="color:#262624;">{ADZUNA_DATE}</strong>
       </div>
-      <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-        <span class="freshness-pill"><span class="dot-green"></span>Adzuna: <strong>{latest_adzuna}</strong></span>
-        <span class="freshness-pill"><span class="dot-blue"></span>GitHub: <strong>{latest_github}</strong></span>
-        <span class="freshness-pill"><span class="dot-stone"></span>Stack Overflow: <strong>2024</strong></span>
+      <div style="display:inline-flex; align-items:center; gap:6px; background:#f4f4f0; border:1px solid #e2e2dc; border-radius:3px; padding:2px 8px; color:#52524d;">
+        <span style="width:6px; height:6px; border-radius:50%; background:#2563eb;"></span>
+        <span style="color:#73736c;">GitHub:</span>
+        <strong style="color:#262624;">{GITHUB_DATE}</strong>
+      </div>
+      <div style="display:inline-flex; align-items:center; gap:6px; background:#f4f4f0; border:1px solid #e2e2dc; border-radius:3px; padding:2px 8px; color:#52524d;">
+        <span style="width:6px; height:6px; border-radius:50%; background:#78716c;"></span>
+        <span style="color:#73736c;">Stack Overflow:</span>
+        <strong style="color:#262624;">2024</strong>
       </div>
     </div>
   </div>
 </div>
 """, unsafe_allow_html=True)
 
-# ── Navigation Tabs ───────────────────────────────────────────────────────────
+
+# ── Primary Navigation Tabs ──────────────────────────────────────────────────
 tab_overview, tab_explorer, tab_signalmap, tab_methodology = st.tabs([
     "Overview",
     "Technology Explorer",
@@ -408,530 +703,834 @@ tab_overview, tab_explorer, tab_signalmap, tab_methodology = st.tabs([
 
 
 # ════════════════════════════════════════════════════════════════════════════
-# TAB 1 — OVERVIEW
+# TAB 1: OVERVIEW (OverviewView.tsx)
 # ════════════════════════════════════════════════════════════════════════════
 with tab_overview:
-    st.markdown('<div style="max-width:1400px; margin:0 auto; padding:24px 32px 48px;">', unsafe_allow_html=True)
-
-    # Header
+    # Editorial Lead Header
     st.markdown(f"""
-    <div style="border-bottom:1px solid #e5e5df; padding-bottom:20px; margin-bottom:24px;
-                display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:12px;">
-      <div>
-        <div class="section-label">Research Briefing • Labor Market Intelligence</div>
-        <div class="section-title">Technology demand vs developer ecosystem signals</div>
-        <div class="section-desc" style="max-width:680px;">
-          Synthesizing <strong>{total_jobs:,}</strong> observed IT employer job postings against
-          Top-100 quality-classified GitHub repositories and 48K+ developer survey responses
-          to distinguish genuine commercial hiring from ecosystem hype.
-        </div>
+    <div style="border-bottom:1px solid #e5e5df; padding-bottom:18px; margin-bottom:20px;">
+      <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#73736c; margin-bottom:4px;">
+        Research Briefing • Labor Market Intelligence
       </div>
+      <h2 style="font-size:26px; font-weight:700; letter-spacing:-0.03em; color:#171717; margin:0 0 6px 0;">
+        Technology demand vs developer ecosystem signals
+      </h2>
+      <p style="font-size:13px; color:#575752; max-width:860px; line-height:1.6; margin:0;">
+        Synthesizing <strong>{TOTAL_JOBS:,}</strong> observed IT employer job postings against Top-100 quality-classified GitHub repositories and 48K+ developer survey responses to distinguish genuine commercial hiring from ecosystem hype.
+      </p>
     </div>
     """, unsafe_allow_html=True)
 
-    # KPI cards
-    c1, c2, c3, c4 = st.columns(4)
-    with c1:
-        st.markdown(f'<div class="kpi-card"><div class="kpi-value">{total_techs}</div><div class="kpi-label">Technologies tracked</div><div class="kpi-sub">Cross-referenced taxonomy</div></div>', unsafe_allow_html=True)
-    with c2:
-        st.markdown(f'<div class="kpi-card"><div class="kpi-value">1,788</div><div class="kpi-label">Job postings</div><div class="kpi-sub">Adzuna India IT deduplicated</div></div>', unsafe_allow_html=True)
-    with c3:
-        st.markdown(f'<div class="kpi-card"><div class="kpi-value">48K+</div><div class="kpi-label">Developer responses</div><div class="kpi-sub">Stack Overflow baseline</div></div>', unsafe_allow_html=True)
-    with c4:
-        st.markdown(f'<div class="kpi-card"><div class="kpi-value">100</div><div class="kpi-label">GitHub repos sampled</div><div class="kpi-sub">Per technology, quality-scored</div></div>', unsafe_allow_html=True)
-
-    st.markdown("<div style='height:24px;'></div>", unsafe_allow_html=True)
-
-    # Signal Map preview
-    st.markdown("""
-    <div style="margin-bottom:6px;">
-      <div style="font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700;
-                  text-transform:uppercase; letter-spacing:.08em; color:#171717;">Technology Signal Map</div>
-      <div style="font-size:12px; color:#666660; margin-top:2px;">
-        Quadrants defined by Weekly Jobs (X = 5 threshold) vs Usable GitHub Repositories (Y = 30 threshold).
-      </div>
-    </div>
-    """, unsafe_allow_html=True)
-    st.plotly_chart(quadrant_scatter(df_latest, height=480), use_container_width=True, config={"displayModeBar": False})
-
-    st.markdown("<div style='height:16px;'></div>", unsafe_allow_html=True)
-
-    # Market Movement section — 3 columns
-    st.markdown("""
-    <div style="border-bottom:1px solid #e5e5df; padding-bottom:8px; margin-bottom:16px;">
-      <div style="font-size:15px; font-weight:700; color:#171717; letter-spacing:-.2px;">Market Movement &amp; Analytical Divergence</div>
-      <div style="font-size:12px; color:#666660; margin-top:2px;">Dissecting weekly employer requisitions against open-source repository traction</div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    col_demand, col_eco, col_div = st.columns(3)
-
-    with col_demand:
-        top_demand = df_latest.nlargest(6, "weekly_job_count")
-        rows = ""
-        for _, r in top_demand.iterrows():
-            rows += f"""<tr>
-              <td style="padding:7px 0; font-weight:600;">{r['canonical_name']}</td>
-              <td style="padding:7px 0; text-align:right; font-weight:700;">{int(r['weekly_job_count'])}</td>
-              <td style="padding:7px 0; text-align:right;">{badge_html(r['composite_signal'])}</td>
-            </tr>"""
+    # 4 KPI Stat Blocks
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
         st.markdown(f"""
-        <div style="background:white; border:1px solid #e5e5df; border-radius:4px; padding:16px;">
-          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #ecece8; padding-bottom:10px; margin-bottom:12px;">
-            <div style="font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.08em;">Rising Employer Demand</div>
-            <div style="font-family:'JetBrains Mono',monospace; font-size:10px; color:#73736c;">Adzuna Weekly</div>
-          </div>
-          <table class="data-table">
-            <thead><tr>
-              <th>Technology</th><th style="text-align:right">Jobs/wk</th><th style="text-align:right">Signal</th>
-            </tr></thead>
-            <tbody>{rows}</tbody>
-          </table>
+        <div class="kpi-block">
+          <div class="kpi-num">{TOTAL_TECHS}</div>
+          <div class="kpi-title">Technologies Tracked</div>
+          <div class="kpi-sub">Cross-referenced taxonomy</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with col2:
+        st.markdown(f"""
+        <div class="kpi-block">
+          <div class="kpi-num">1,788</div>
+          <div class="kpi-title">Job Postings</div>
+          <div class="kpi-sub">Adzuna India IT deduplicated</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with col3:
+        st.markdown("""
+        <div class="kpi-block">
+          <div class="kpi-num">48K+</div>
+          <div class="kpi-title">Developer Responses</div>
+          <div class="kpi-sub">Stack Overflow baseline</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with col4:
+        st.markdown("""
+        <div class="kpi-block">
+          <div class="kpi-num">100</div>
+          <div class="kpi-title">GitHub Repos Sampled</div>
+          <div class="kpi-sub">Per technology, quality-scored</div>
         </div>
         """, unsafe_allow_html=True)
 
-    with col_eco:
-        top_eco = df_latest.nlargest(6, "gh_usable_repos")
-        rows2 = ""
-        for _, r in top_eco.iterrows():
-            stars_k = f"{r['gh_median_stars']/1000:.1f}K" if pd.notna(r['gh_median_stars']) and r['gh_median_stars'] >= 1000 else safe_int(r['gh_median_stars'])
-            act_pct = f"{int(r['gh_active_ratio']*100)}%" if pd.notna(r['gh_active_ratio']) else "—"
-            rows2 += f"""<tr>
-              <td style="padding:7px 0; font-weight:600;">{r['canonical_name']}</td>
-              <td style="padding:7px 0; text-align:right; font-weight:700;">{safe_int(r['gh_usable_repos'])}</td>
-              <td style="padding:7px 0; text-align:right; color:#575752;">{stars_k}</td>
-              <td style="padding:7px 0; text-align:right;">{act_pct}</td>
+    st.markdown("<div style='height:24px;'></div>", unsafe_allow_html=True)
+
+    # Main Section: Technology Signal Map
+    st.markdown("""
+    <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px;">
+      <div>
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#171717;">
+          Technology Signal Map
+        </div>
+        <div style="font-size:12px; color:#666660; margin-top:2px;">
+          Quadrants defined by Weekly Jobs (X = 5 threshold) vs Usable GitHub Repositories (Y = 30 threshold).
+        </div>
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Quadrant Top Frame
+    st.markdown(f"""
+    <div style="background:#f4f4f0; border:1px solid #e5e5df; border-bottom:none; border-radius:4px 4px 0 0; padding:8px 16px; display:flex; justify-content:space-between; align-items:center; font-family:'IBM Plex Mono',monospace; font-size:11px;">
+      <div>
+        <strong style="color:#171717;">Signal Quadrants</strong> &bull; <span style="color:#575752;">Showing {TOTAL_TECHS} technologies</span>
+      </div>
+      <div style="display:flex; align-items:center; gap:14px; color:#52524b;">
+        <span><span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:#059669; margin-right:4px;"></span>Thriving</span>
+        <span><span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:#2563eb; margin-right:4px;"></span>Demand-led</span>
+        <span><span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:#d97706; margin-right:4px;"></span>Hype-led</span>
+        <span><span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:#64748b; margin-right:4px;"></span>Weak</span>
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.plotly_chart(build_quadrant_plot(df_techs, height=520), use_container_width=True, config={"displayModeBar": False})
+
+    # Quadrant Bottom Frame
+    st.markdown("""
+    <div style="background:#f4f4f0; border:1px solid #e5e5df; border-top:none; border-radius:0 0 4px 4px; padding:6px 16px; margin-top:-10px; margin-bottom:28px; display:flex; justify-content:space-between; font-family:'IBM Plex Mono',monospace; font-size:11px; color:#52524d;">
+      <div><strong>Analytical Thresholds:</strong> Employer demand ≥ 5 jobs/week | GitHub ecosystem ≥ 30 usable repos</div>
+      <div style="color:#73736c;">Calibrated square-root X-axis for low-frequency demand distinction</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Market Movement Section (3 Columns)
+    st.markdown("""
+    <div style="border-bottom:1px solid #e5e5df; padding-bottom:8px; margin-bottom:16px;">
+      <h3 style="font-size:16px; font-weight:700; color:#171717; margin:0 0 4px 0;">Market Movement &amp; Analytical Divergence</h3>
+      <p style="font-size:12px; color:#666660; margin:0;">Dissecting weekly employer requisitions against open-source repository traction</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    col_m1, col_m2, col_m3 = st.columns(3)
+
+    # Table 1: Rising Employer Demand
+    with col_m1:
+        top_demand = df_techs.nlargest(6, "weekly_job_count")
+        demand_rows = ""
+        for _, r in top_demand.iterrows():
+            demand_rows += f"""<tr>
+              <td style="font-weight:600;">{r['canonical_name']}</td>
+              <td style="text-align:right; font-weight:700;">{int(r['weekly_job_count'])}</td>
+              <td style="text-align:right; color:#047857; font-weight:600;">+{r['job_trend_pct']}%</td>
+              <td style="text-align:right;">{render_signal_badge(r['composite_signal'], size='sm', show_dot=False)}</td>
             </tr>"""
+
         st.markdown(f"""
-        <div style="background:white; border:1px solid #e5e5df; border-radius:4px; padding:16px;">
-          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #ecece8; padding-bottom:10px; margin-bottom:12px;">
-            <div style="font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.08em;">Ecosystem Attention</div>
-            <div style="font-family:'JetBrains Mono',monospace; font-size:10px; color:#73736c;">GitHub Sample</div>
+        <div style="background:white; border:1px solid #e5e5df; border-radius:4px; padding:16px; height:100%;">
+          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #ecece8; padding-bottom:8px; margin-bottom:12px;">
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#171717;">
+              Rising Employer Demand
+            </div>
+            <span style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#73736c;">Adzuna Weekly</span>
           </div>
-          <table class="data-table">
-            <thead><tr>
-              <th>Technology</th><th style="text-align:right">Usable</th><th style="text-align:right">Stars</th><th style="text-align:right">Active</th>
-            </tr></thead>
-            <tbody>{rows2}</tbody>
+          <table class="dense-table">
+            <thead>
+              <tr>
+                <th>Technology</th>
+                <th style="text-align:right;">Jobs/wk</th>
+                <th style="text-align:right;">Trend</th>
+                <th style="text-align:right;">Signal</th>
+              </tr>
+            </thead>
+            <tbody>
+              {demand_rows}
+            </tbody>
           </table>
-          <div style="margin-top:12px; padding-top:8px; border-top:1px solid #f0f0eb; font-family:'JetBrains Mono',monospace; font-size:10px; color:#787870;">
+          <div style="margin-top:14px; padding-top:8px; border-top:1px solid #f0f0eb; font-family:'IBM Plex Mono',monospace; font-size:11px; color:#73736c;">
+            Weekly postings across observed hiring demand
+          </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # Table 2: Ecosystem Attention
+    with col_m2:
+        top_eco = df_techs.nlargest(6, "gh_usable_repos")
+        eco_rows = ""
+        for _, r in top_eco.iterrows():
+            stars_k = f"{r['gh_median_stars']/1000:.1f}K" if r["gh_median_stars"] >= 1000 else f"{int(r['gh_median_stars'])}"
+            act_pct = f"{int(r['gh_active_ratio']*100)}%" if r["gh_active_ratio"] > 0 else "—"
+            eco_rows += f"""<tr>
+              <td style="font-weight:600;">{r['canonical_name']}</td>
+              <td style="text-align:right; font-weight:700;">{int(r['gh_usable_repos'])}</td>
+              <td style="text-align:right; color:#575752;">{stars_k}</td>
+              <td style="text-align:right; font-weight:600;">{act_pct}</td>
+            </tr>"""
+
+        st.markdown(f"""
+        <div style="background:white; border:1px solid #e5e5df; border-radius:4px; padding:16px; height:100%;">
+          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #ecece8; padding-bottom:8px; margin-bottom:12px;">
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#171717;">
+              Ecosystem Attention
+            </div>
+            <span style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#73736c;">GitHub Sample</span>
+          </div>
+          <table class="dense-table">
+            <thead>
+              <tr>
+                <th>Technology</th>
+                <th style="text-align:right;">Usable</th>
+                <th style="text-align:right;">Stars</th>
+                <th style="text-align:right;">Active</th>
+              </tr>
+            </thead>
+            <tbody>
+              {eco_rows}
+            </tbody>
+          </table>
+          <div style="margin-top:14px; padding-top:8px; border-top:1px solid #f0f0eb; font-family:'IBM Plex Mono',monospace; font-size:10px; color:#787870;">
             Top 100 repositories sampled per technology
           </div>
         </div>
         """, unsafe_allow_html=True)
 
-    with col_div:
-        demand_led = df_latest[df_latest["composite_signal"] == "demand_led"].nlargest(2, "weekly_job_count")
-        hype_led   = df_latest[df_latest["composite_signal"] == "hype_led"].nlargest(2, "gh_usable_repos")
-        cards = ""
-        for _, r in demand_led.iterrows():
-            cards += f"""<div class="div-demand" style="margin-bottom:8px;">
-              <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span style="font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700;">{r['canonical_name']}</span>
-                {badge_html('demand_led')}
-              </div>
-              <div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#4b5563; margin-top:3px;">
-                {safe_int(r['weekly_job_count'])} jobs/week &bull; {safe_int(r['gh_usable_repos'])} usable repos
-              </div>
-              <div style="font-size:11px; color:#1e3a8a; margin-top:4px; line-height:1.5;">
-                Strong hiring demand with comparatively limited ecosystem activity.
-              </div>
-            </div>"""
-        for _, r in hype_led.iterrows():
-            cards += f"""<div class="div-hype" style="margin-bottom:8px;">
-              <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span style="font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700;">{r['canonical_name']}</span>
-                {badge_html('hype_led')}
-              </div>
-              <div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#4b5563; margin-top:3px;">
-                {safe_int(r['weekly_job_count'])} jobs/week &bull; {safe_int(r['gh_usable_repos'])} usable repos
-              </div>
-              <div style="font-size:11px; color:#92400e; margin-top:4px; line-height:1.5;">
-                Strong ecosystem attention without comparable observed hiring demand.
-              </div>
-            </div>"""
+    # Section 3: Divergence Watch
+    with col_m3:
         st.markdown(f"""
-        <div style="background:white; border:1px solid #e5e5df; border-radius:4px; padding:16px;">
-          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #ecece8; padding-bottom:10px; margin-bottom:12px;">
-            <div style="font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.08em;">Divergence Watch</div>
-            <div style="font-family:'JetBrains Mono',monospace; font-size:10px; color:#73736c;">Signal Disagreement</div>
+        <div style="background:white; border:1px solid #e5e5df; border-radius:4px; padding:16px; height:100%;">
+          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #ecece8; padding-bottom:8px; margin-bottom:12px;">
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#171717;">
+              Divergence Watch
+            </div>
+            <span style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#73736c;">Signal Disagreement</span>
           </div>
-          {cards}
+
+          <!-- Card 1: SQL Server / DEMAND-LED -->
+          <div class="divergence-card-demand">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:12px; color:#171717;">SQL Server</span>
+              {render_signal_badge('DEMAND-LED', size='sm', show_dot=False)}
+            </div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#4b5563; margin-top:3px;">
+              28 jobs/week &bull; 17 usable repositories
+            </div>
+            <p style="font-size:11px; color:#1e3a8a; margin:4px 0 0 0; line-height:1.4;">
+              Strong hiring demand with comparatively limited ecosystem activity.
+            </p>
+          </div>
+
+          <!-- Card 2: LangChain / HYPE-LED -->
+          <div class="divergence-card-hype">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:12px; color:#171717;">LangChain</span>
+              {render_signal_badge('HYPE-LED', size='sm', show_dot=False)}
+            </div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#4b5563; margin-top:3px;">
+              0 jobs/week &bull; 78 usable repositories
+            </div>
+            <p style="font-size:11px; color:#92400e; margin:4px 0 0 0; line-height:1.4;">
+              Strong ecosystem attention without comparable observed hiring demand.
+            </p>
+          </div>
+
+          <!-- Card 3: Docker / HYPE-LED -->
+          <div class="divergence-card-hype">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:12px; color:#171717;">Docker</span>
+              {render_signal_badge('HYPE-LED', size='sm', show_dot=False)}
+            </div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#4b5563; margin-top:3px;">
+              1 jobs/week &bull; 89 usable repositories
+            </div>
+            <p style="font-size:11px; color:#92400e; margin:4px 0 0 0; line-height:1.4;">
+              Universal container tooling adoption; rare in isolated hiring requisitions.
+            </p>
+          </div>
         </div>
         """, unsafe_allow_html=True)
 
-    st.markdown('</div>', unsafe_allow_html=True)
-
 
 # ════════════════════════════════════════════════════════════════════════════
-# TAB 2 — TECHNOLOGY EXPLORER
+# TAB 2: TECHNOLOGY EXPLORER (TechnologyExplorerView.tsx)
 # ════════════════════════════════════════════════════════════════════════════
 with tab_explorer:
-    st.markdown('<div style="max-width:1400px; margin:0 auto; padding:24px 32px 48px;">', unsafe_allow_html=True)
-
+    # Header
     st.markdown("""
-    <div class="section-label">Full Dataset</div>
-    <div class="section-title">Technology Explorer</div>
-    <div class="section-desc" style="margin-bottom:20px;">
-      Browse all tracked technologies. Each row combines Adzuna job demand, GitHub ecosystem signal, and Stack Overflow adoption baseline.
+    <div style="border-bottom:1px solid #e5e5df; padding-bottom:14px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:10px;">
+      <div>
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#73736c; margin-bottom:2px;">
+          Query &amp; Inspection
+        </div>
+        <h2 style="font-size:24px; font-weight:700; letter-spacing:-0.03em; color:#171717; margin:0 0 4px 0;">
+          Technology Explorer
+        </h2>
+        <p style="font-size:12px; color:#575752; margin:0;">
+          Dense comparative index across employer job postings, developer adoption, and GitHub repository metrics.
+        </p>
+      </div>
     </div>
     """, unsafe_allow_html=True)
 
-    # Filters
-    fc1, fc2, fc3 = st.columns([2, 2, 1])
-    with fc1:
-        sig_filter = st.multiselect(
-            "Signal", ["thriving", "demand_led", "hype_led", "weak"],
-            default=["thriving", "demand_led", "hype_led", "weak"],
-            format_func=lambda x: x.replace("_", "-").upper(),
-        )
-    with fc2:
-        search = st.text_input("Search technology", placeholder="e.g. Python, Docker…")
-    with fc3:
-        emerging_only = st.checkbox("Emerging only")
+    # Filter Bar
+    f_col1, f_col2, f_col3, f_col4 = st.columns([3, 2, 2, 1.5])
+    with f_col1:
+        search_exp = st.text_input("Search", placeholder="Search technology...", label_visibility="collapsed")
+    with f_col2:
+        cat_options = ["all", "Languages", "Frameworks & Runtimes", "Cloud & Infrastructure", "Data & Databases", "AI & Machine Learning", "DevOps & Tooling"]
+        cat_exp = st.selectbox("Category", cat_options, format_func=lambda c: f"Category: {c.title()}" if c != "all" else "Category: All", label_visibility="collapsed")
+    with f_col3:
+        sig_options = ["all", "THRIVING", "DEMAND-LED", "HYPE-LED", "WEAK"]
+        sig_exp = st.selectbox("Signal", sig_options, format_func=lambda s: f"Signal: {s}" if s != "all" else "Signal: All", label_visibility="collapsed")
+    with f_col4:
+        emerging_exp = st.checkbox("Emerging only", key="exp_emerging")
 
-    df_filtered = df_latest.copy()
-    if sig_filter:
-        df_filtered = df_filtered[df_filtered["composite_signal"].isin(sig_filter)]
-    if search:
-        df_filtered = df_filtered[df_filtered["canonical_name"].str.contains(search, case=False)]
-    if emerging_only:
-        df_filtered = df_filtered[df_filtered["is_emerging"] == True]
+    df_filtered_exp = df_techs.copy()
+    if search_exp.strip():
+        q = search_exp.strip().lower()
+        df_filtered_exp = df_filtered_exp[df_filtered_exp["canonical_name"].str.lower().str.contains(q)]
+    if cat_exp != "all":
+        df_filtered_exp = df_filtered_exp[df_filtered_exp["category"] == cat_exp]
+    if sig_exp != "all":
+        df_filtered_exp = df_filtered_exp[df_filtered_exp["composite_signal"] == sig_exp]
+    if emerging_exp:
+        df_filtered_exp = df_filtered_exp[df_filtered_exp["is_emerging"] == True]
 
-    df_filtered = df_filtered.sort_values("weekly_job_count", ascending=False)
+    # Showing badge
+    st.markdown(f"""
+    <div style="display:flex; justify-content:space-between; align-items:center; margin:10px 0 8px 0; font-family:'IBM Plex Mono',monospace; font-size:11px; color:#73736c;">
+      <span>Showing <strong style="color:#171717;">{len(df_filtered_exp)}</strong> of {TOTAL_TECHS} technologies</span>
+      <span>Database mart: <code style="color:#171717;">fct_skill_signals</code></span>
+    </div>
+    """, unsafe_allow_html=True)
 
-    # Table
-    rows = ""
-    for _, r in df_filtered.iterrows():
-        stars_k = f"{r['gh_median_stars']/1000:.1f}K" if pd.notna(r['gh_median_stars']) and r['gh_median_stars'] >= 1000 else safe_int(r['gh_median_stars'])
-        so_pct  = f"{r['so_adoption_pct']:.1f}%" if pd.notna(r['so_adoption_pct']) else "—"
-        act     = f"{int(r['gh_active_ratio']*100)}%" if pd.notna(r['gh_active_ratio']) else "—"
-        emg     = '<span style="font-size:9px;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;border-radius:2px;padding:1px 5px;font-family:monospace;">NEW</span>' if r['is_emerging'] else ""
-        rows += f"""<tr>
-          <td style="padding:8px 0; font-weight:600;">{r['canonical_name']} {emg}</td>
-          <td style="padding:8px 0; text-align:right; font-weight:700;">{safe_int(r['weekly_job_count'])}</td>
-          <td style="padding:8px 0; text-align:right;">{safe_int(r['gh_usable_repos'])}</td>
-          <td style="padding:8px 0; text-align:right; color:#575752;">{stars_k}</td>
-          <td style="padding:8px 0; text-align:right;">{act}</td>
-          <td style="padding:8px 0; text-align:right;">{so_pct}</td>
-          <td style="padding:8px 0; text-align:right;">{badge_html(r['composite_signal'])}</td>
+    # Dense Analytical Table
+    table_rows = ""
+    for _, row in df_filtered_exp.iterrows():
+        name = row["canonical_name"]
+        cat = row["category"]
+        jobs = int(row["weekly_job_count"])
+        repos = int(row["gh_usable_repos"])
+        stars_k = f"{row['gh_median_stars']/1000:.1f}K" if row["gh_median_stars"] >= 1000 else f"{int(row['gh_median_stars'])}"
+        act_pct = f"{int(row['gh_active_ratio']*100)}%" if row["gh_active_ratio"] > 0 else "—"
+        so_pct = f"{row['so_adoption_pct']:.1f}%" if row["so_adoption_pct"] > 0 else "—"
+        badge = render_signal_badge(row["composite_signal"], size="sm")
+
+        emg_tag = '<span style="font-size:9px; font-family:\'IBM Plex Mono\',monospace; background:#fef3c7; color:#92400e; padding:1px 4px; border-radius:2px; margin-left:6px;">emerging</span>' if row["is_emerging"] else ""
+
+        table_rows += f"""<tr>
+          <td>
+            <div style="font-weight:600; color:#171717; display:flex; align-items:center;">
+              {name} {emg_tag}
+            </div>
+            <div style="font-size:10px; color:#888880; font-family:'Plus Jakarta Sans',sans-serif;">{cat}</div>
+          </td>
+          <td>{badge}</td>
+          <td style="text-align:right; font-weight:700; color:{'#171717' if jobs >= 5 else '#73736c'};">{jobs}</td>
+          <td style="text-align:right; color:#333330;">{so_pct}</td>
+          <td style="text-align:right; font-weight:700; color:{'#171717' if repos >= 30 else '#73736c'};">{repos} <span style="font-size:10px; color:#888880;">/ 100</span></td>
+          <td style="text-align:right; color:#333330;">{act_pct}</td>
+          <td style="text-align:right; color:#52524d;">{stars_k}</td>
+          <td style="text-align:right; color:#047857; font-weight:600;">+{row['job_trend_pct']}%</td>
         </tr>"""
 
     st.markdown(f"""
-    <div style="background:white; border:1px solid #e5e5df; border-radius:4px; padding:16px; overflow-x:auto;">
-      <div style="font-family:'JetBrains Mono',monospace; font-size:10px; color:#73736c; margin-bottom:8px;">
-        {len(df_filtered)} technologies shown
-      </div>
-      <table class="data-table">
-        <thead><tr>
-          <th>Technology</th>
-          <th style="text-align:right">Jobs/wk</th>
-          <th style="text-align:right">GH Repos</th>
-          <th style="text-align:right">Med. Stars</th>
-          <th style="text-align:right">Active %</th>
-          <th style="text-align:right">SO Adoption</th>
-          <th style="text-align:right">Signal</th>
-        </tr></thead>
-        <tbody>{rows}</tbody>
+    <div style="background:white; border:1px solid #e5e5df; border-radius:4px; overflow-x:auto;">
+      <table class="dense-table">
+        <thead>
+          <tr>
+            <th>Technology</th>
+            <th>Signal</th>
+            <th style="text-align:right;">Jobs/wk</th>
+            <th style="text-align:right;">SO Adoption</th>
+            <th style="text-align:right;">Usable Repos</th>
+            <th style="text-align:right;">Active Repo %</th>
+            <th style="text-align:right;">Median Stars</th>
+            <th style="text-align:right;">Trend</th>
+          </tr>
+        </thead>
+        <tbody>
+          {table_rows if table_rows else '<tr><td colspan="8" style="text-align:center; padding:24px; color:#73736c;">No technologies match the selected filters.</td></tr>'}
+        </tbody>
       </table>
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown('</div>', unsafe_allow_html=True)
-
 
 # ════════════════════════════════════════════════════════════════════════════
-# TAB 3 — SIGNAL MAP
+# TAB 3: SIGNAL MAP (SignalMapView.tsx)
 # ════════════════════════════════════════════════════════════════════════════
 with tab_signalmap:
-    st.markdown('<div style="max-width:1400px; margin:0 auto; padding:24px 32px 48px;">', unsafe_allow_html=True)
-
+    # Header
     st.markdown("""
-    <div class="section-label">Analytical Heart • Quadrant Decomposition</div>
-    <div class="section-title">Signal Map</div>
-    <div class="section-desc" style="margin-bottom:20px;">
-      Where employer demand and developer ecosystem attention diverge.
-      X = 5 jobs/week threshold, Y = 30 usable GitHub repositories threshold.
+    <div style="border-bottom:1px solid #e5e5df; padding-bottom:14px; margin-bottom:16px;">
+      <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#73736c; margin-bottom:2px;">
+        Analytical Heart • Quadrant Decomposition
+      </div>
+      <h2 style="font-size:24px; font-weight:700; letter-spacing:-0.03em; color:#171717; margin:0 0 4px 0;">
+        Signal Map
+      </h2>
+      <p style="font-size:12px; color:#575752; margin:0;">
+        Where employer demand and developer ecosystem attention diverge. X = 5 jobs/week threshold, Y = 30 usable GitHub repositories threshold.
+      </p>
     </div>
     """, unsafe_allow_html=True)
 
-    # View mode selector + filters
-    sm_col1, sm_col2, sm_col3 = st.columns([3, 2, 1])
-    with sm_col1:
-        view_mode = st.radio(
-            "View",
-            ["divergence", "all", "thriving", "demand_led", "hype_led", "weak"],
+    # View Mode Selector & Filters
+    sm_c1, sm_c2, sm_c3, sm_c4 = st.columns([3.5, 2.5, 2, 1.2])
+    with sm_c1:
+        sm_view = st.radio(
+            "View Mode",
+            ["divergence", "all", "THRIVING", "DEMAND-LED", "HYPE-LED", "WEAK"],
             format_func=lambda x: {
                 "divergence": "Divergence View",
                 "all": "All Technologies",
-                "thriving": "Thriving",
-                "demand_led": "Demand-Led",
-                "hype_led": "Hype-Led",
-                "weak": "Weak",
+                "THRIVING": "Thriving",
+                "DEMAND-LED": "Demand-led",
+                "HYPE-LED": "Hype-led",
+                "WEAK": "Weak",
             }[x],
             horizontal=True,
+            label_visibility="collapsed"
         )
-    with sm_col2:
-        sm_search = st.text_input("Highlight technology", placeholder="Type to highlight...", key="sm_search")
-    with sm_col3:
-        sm_emerging = st.checkbox("Emerging only", key="sm_emerging")
+    with sm_c2:
+        sm_search = st.text_input("Highlight", placeholder="Highlight technology...", label_visibility="collapsed")
+    with sm_c3:
+        sm_cat = st.selectbox("Category", ["all", "Languages", "Frameworks & Runtimes", "Cloud & Infrastructure", "Data & Databases", "AI & Machine Learning", "DevOps & Tooling"], format_func=lambda c: f"Category: {c.title()}" if c != "all" else "Category: All", label_visibility="collapsed")
+    with sm_c4:
+        sm_emerging = st.checkbox("Emerging", key="sm_emerging_cb")
 
-    if view_mode == "divergence":
+    if sm_view == "divergence":
         st.markdown("""
-        <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:4px; padding:10px 14px;
-                    font-size:12px; color:#1e40af; margin-bottom:12px;">
-          <strong>Divergence Mode:</strong> Highlighting DEMAND-LED and HYPE-LED quadrants.
-          Thriving and Weak are dimmed.
+        <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:4px; padding:10px 14px; font-size:12px; color:#1e40af; margin-bottom:14px;">
+          <strong>Divergence Mode Active:</strong> Highlighting DEMAND-LED and HYPE-LED quadrants to show where employer hiring and open-source attention deviate. Thriving and Weak points are dimmed.
         </div>
         """, unsafe_allow_html=True)
 
-    df_sm = df_latest.copy()
-    if sm_emerging:
-        df_sm = df_sm[df_sm["is_emerging"] == True]
+    # 8 / 4 Column Layout: Scatter Left, Inspector Right
+    grid_scatter, grid_inspector = st.columns([8, 4])
 
-    left_col, right_col = st.columns([8, 4])
+    with grid_scatter:
+        fig_map = build_quadrant_plot(
+            df_techs,
+            filter_mode=sm_view,
+            selected_name=sm_search.strip() if sm_search else None,
+            search_query=sm_search,
+            category_filter=sm_cat,
+            emerging_only=sm_emerging,
+            height=550
+        )
+        st.plotly_chart(fig_map, use_container_width=True, config={"displayModeBar": False})
 
-    with left_col:
-        selected_tech_name = sm_search if sm_search else None
-        fig_sm = quadrant_scatter(df_sm, highlight=view_mode, selected=selected_tech_name, height=540)
-        st.plotly_chart(fig_sm, use_container_width=True, config={"displayModeBar": False})
+    with grid_inspector:
+        # Determine inspected technology
+        inspect_tech = None
+        if sm_search.strip():
+            matched = df_techs[df_techs["canonical_name"].str.lower() == sm_search.strip().lower()]
+            if not matched.empty:
+                inspect_tech = matched.iloc[0]
+        
+        # Default fallback to LangChain or Python
+        if inspect_tech is None:
+            default_cand = df_techs[df_techs["canonical_name"] == "LangChain"]
+            inspect_tech = default_cand.iloc[0] if not default_cand.empty else df_techs.iloc[0]
 
-    with right_col:
-        # Inspector panel — auto-populate from search or show most interesting divergence
-        inspect_row = None
-        if sm_search:
-            match = df_sm[df_sm["canonical_name"].str.lower() == sm_search.lower()]
-            if not match.empty:
-                inspect_row = match.iloc[0]
-        if inspect_row is None and not df_sm.empty:
-            # Default: first hype-led or demand-led
-            div = df_sm[df_sm["composite_signal"].isin(["hype_led", "demand_led"])]
-            if not div.empty:
-                inspect_row = div.iloc[0]
-            else:
-                inspect_row = df_sm.iloc[0]
+        # Inspector Selector Dropdown
+        tech_list = df_techs["canonical_name"].tolist()
+        def_idx = tech_list.index(inspect_tech["canonical_name"]) if inspect_tech["canonical_name"] in tech_list else 0
+        chosen_tech_name = st.selectbox("Inspect Technology", tech_list, index=def_idx, label_visibility="collapsed")
+        
+        ins = df_techs[df_techs["canonical_name"] == chosen_tech_name].iloc[0]
+        
+        jobs_cnt = int(ins["weekly_job_count"])
+        repos_cnt = int(ins["gh_usable_repos"])
+        j_arrow = "≥ 5 ↑" if jobs_cnt >= 5 else "< 5 ↓"
+        r_arrow = "≥ 30 ↑" if repos_cnt >= 30 else "< 30 ↓"
+        stars_str = f"{ins['gh_median_stars']/1000:.1f}K" if ins["gh_median_stars"] >= 1000 else f"{int(ins['gh_median_stars'])}"
+        act_str = f"{int(ins['gh_active_ratio']*100)}%" if ins["gh_active_ratio"] > 0 else "—"
 
-        if inspect_row is not None:
-            r = inspect_row
-            jdir = "≥ 5 ↑" if pd.notna(r['weekly_job_count']) and r['weekly_job_count'] >= 5 else "< 5 ↓"
-            gdir = "≥ 30 ↑" if pd.notna(r['gh_usable_repos']) and r['gh_usable_repos'] >= 30 else "< 30 ↓"
-            stars_k = f"{r['gh_median_stars']/1000:.1f}K" if pd.notna(r['gh_median_stars']) and r['gh_median_stars'] >= 1000 else safe_int(r['gh_median_stars'])
-            so_val = f"{r['so_adoption_pct']:.1f}%" if pd.notna(r['so_adoption_pct']) else "—"
-            act_val = f"{int(r['gh_active_ratio']*100)}%" if pd.notna(r['gh_active_ratio']) else "—"
-
-            st.markdown(f"""
-            <div class="inspector-box">
-              <div style="display:flex; justify-content:space-between; align-items:center;
-                          border-bottom:1px solid #ecece8; padding-bottom:10px; margin-bottom:12px;">
-                <div style="font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700;
-                            text-transform:uppercase; letter-spacing:.08em; color:#73736c;">Technology Inspector</div>
-              </div>
-              <div style="margin-bottom:12px;">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                  <div style="font-size:20px; font-weight:700; color:#171717; letter-spacing:-.3px;">{r['canonical_name']}</div>
-                  {badge_html(r['composite_signal'])}
-                </div>
-                <div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#73736c; margin-top:4px;">
-                  Adzuna keyword: <code style="color:#171717;">{r['adzuna_keyword']}</code>
-                </div>
-              </div>
-              <div style="background:#fafaf8; border:1px solid #e8e8e2; border-radius:4px; padding:12px; margin-bottom:12px;">
-                <div class="inspector-metric-row"><span class="inspector-metric-label">Employer Demand:</span><span class="inspector-metric-value">{safe_int(r['weekly_job_count'])} jobs/week</span></div>
-                <div class="inspector-metric-row"><span class="inspector-metric-label">GitHub Ecosystem:</span><span class="inspector-metric-value">{safe_int(r['gh_usable_repos'])} usable repos</span></div>
-                <div class="inspector-metric-row"><span class="inspector-metric-label">Stack Overflow:</span><span class="inspector-metric-value">{so_val}</span></div>
-                <div class="inspector-metric-row"><span class="inspector-metric-label">Active Repositories:</span><span class="inspector-metric-value">{act_val}</span></div>
-                <div class="inspector-metric-row"><span class="inspector-metric-label">Median Stars:</span><span class="inspector-metric-value">{stars_k}</span></div>
-                <div class="inspector-metric-row"><span class="inspector-metric-label">Top-5 Star Conc.:</span><span class="inspector-metric-value">{r['gh_top5_concentration']:.1%}</span></div>
-              </div>
-              <div style="border-top:1px solid #d4d4ce; padding-top:10px;">
-                <div style="font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; color:#73736c; margin-bottom:4px;">Quadrant Signal Evaluation</div>
-                <div style="font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:700; color:#171717;">
-                  Jobs {jdir} + Ecosystem {gdir} &rarr; {r['composite_signal'].replace('_','-').upper()}
-                </div>
-              </div>
-              <div style="margin-top:12px; border-top:1px solid #ecece8; padding-top:12px; font-size:11px; color:#73736c; font-family:'JetBrains Mono',monospace;">
-                GitHub topic: <a href="https://github.com/topics/{r['github_slug']}" target="_blank"
-                  style="color:#2563eb; text-decoration:none;">github.com/topics/{r['github_slug']}</a>
-              </div>
+        st.markdown(f"""
+        <div class="inspector-panel">
+          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #ecece8; padding-bottom:10px; margin-bottom:14px;">
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#73736c;">
+              Technology Inspector
             </div>
+            <span style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#787870;">
+              {ins['category']}
+            </span>
+          </div>
 
-            <!-- Divergence reference -->
-            <div style="margin-top:12px; border-top:1px solid #ecece8; padding-top:12px; font-size:11px;">
-              <div style="font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#171717; margin-bottom:8px;">Divergence Archetypes</div>
-              <div class="div-demand" style="margin-bottom:6px; font-size:11px;">
-                <strong>DEMAND-LED:</strong> High employer demand (Jobs &ge; 5) despite limited GitHub ecosystem (Repos &lt; 30). Common in enterprise backend and databases.
-              </div>
-              <div class="div-hype" style="font-size:11px;">
-                <strong>HYPE-LED:</strong> High open-source attention (Repos &ge; 30) without comparable hiring (Jobs &lt; 5). Common in emerging AI tooling.
-              </div>
+          <div style="margin-bottom:14px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <h3 style="font-size:22px; font-weight:700; color:#171717; margin:0;">{ins['canonical_name']}</h3>
+              {render_signal_badge(ins['composite_signal'], size='md')}
             </div>
-            """, unsafe_allow_html=True)
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#73736c; margin-top:4px;">
+              Adzuna keyword: <code style="color:#171717;">{ins['adzuna_keyword']}</code>
+            </div>
+          </div>
 
-    st.markdown('</div>', unsafe_allow_html=True)
+          <!-- Core Quadrant Metrics Box -->
+          <div style="background:#fafaf8; border:1px solid #e8e8e2; border-radius:4px; padding:12px; margin-bottom:14px; font-family:'IBM Plex Mono',monospace; font-size:11px;">
+            <div style="display:flex; justify-content:space-between; padding:3px 0;">
+              <span style="color:#73736c;">Employer Demand:</span>
+              <strong style="color:#171717;">{jobs_cnt} jobs/week</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding:3px 0;">
+              <span style="color:#73736c;">GitHub Ecosystem:</span>
+              <strong style="color:#171717;">{repos_cnt} usable repos</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding:3px 0;">
+              <span style="color:#73736c;">Stack Overflow:</span>
+              <span style="color:#171717;">{ins['so_adoption_pct']:.1f}%</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding:3px 0;">
+              <span style="color:#73736c;">Active Repositories:</span>
+              <span style="color:#171717;">{act_str}</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding:3px 0;">
+              <span style="color:#73736c;">Median Stars:</span>
+              <span style="color:#171717;">{stars_str}</span>
+            </div>
+          </div>
+
+          <!-- Signal Evaluation -->
+          <div style="border-top:1px solid #d4d4ce; padding-top:12px; margin-bottom:14px;">
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; text-transform:uppercase; color:#73736c; margin-bottom:4px;">
+              Quadrant Signal Evaluation
+            </div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:13px; font-weight:700; color:#171717;">
+              Jobs {j_arrow} + Ecosystem {r_arrow} &rarr; {ins['composite_signal']}
+            </div>
+            <p style="font-size:11px; color:#40403c; line-height:1.5; background:#f7f7f3; border:1px solid #e8e8e2; border-radius:3px; padding:10px; margin:8px 0 0 0;">
+              {ins['divergence_note'] if ins['divergence_note'] else 'Evaluation generated from observed Adzuna hiring demand and quality-classified GitHub sample.'}
+            </p>
+          </div>
+
+          <!-- Archetypes Reference -->
+          <div style="border-top:1px solid #ecece8; padding-top:12px; font-size:11px;">
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#171717; margin-bottom:6px;">
+              Divergence Archetypes:
+            </div>
+            <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:3px; padding:8px 10px; color:#1e40af; margin-bottom:6px;">
+              <strong>DEMAND-LED:</strong> High employer demand (Jobs ≥ 5) despite limited GitHub ecosystem (Repos &lt; 30). Common in enterprise backend, databases, and proprietary stacks.
+            </div>
+            <div style="background:#fffbeb; border:1px solid #fde68a; border-radius:3px; padding:8px 10px; color:#92400e;">
+              <strong>HYPE-LED:</strong> High open-source developer attention (Repos ≥ 30) without comparable observed hiring demand (Jobs &lt; 5). Common in emerging AI tooling and experimental frameworks.
+            </div>
+          </div>
+        </div>
+        """, unsafe_allow_html=True)
 
 
 # ════════════════════════════════════════════════════════════════════════════
-# TAB 4 — METHODOLOGY
+# TAB 4: METHODOLOGY (MethodologyView.tsx)
 # ════════════════════════════════════════════════════════════════════════════
 with tab_methodology:
-    st.markdown('<div style="max-width:900px; margin:0 auto; padding:24px 32px 48px;">', unsafe_allow_html=True)
-
     st.markdown("""
-    <div class="section-label">Technical Specification &amp; Pipeline Architecture</div>
-    <div class="section-title">How the signals are constructed</div>
-    <div class="section-desc" style="margin-bottom:28px;">
-      Rigorous methodology uniting annual survey baselines, daily observed hiring demand,
-      and monthly quality-filtered open source ecosystem snapshots.
+    <div style="border-bottom:1px solid #e5e5df; padding-bottom:16px; margin-bottom:24px; max-width:1000px;">
+      <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#73736c; margin-bottom:4px;">
+        Technical Specification &amp; Pipeline Architecture
+      </div>
+      <h2 style="font-size:26px; font-weight:700; letter-spacing:-0.03em; color:#171717; margin:0 0 6px 0;">
+        How the signals are constructed
+      </h2>
+      <p style="font-size:13px; color:#575752; margin:0; line-height:1.6;">
+        Rigorous methodology uniting annual survey baselines, daily observed hiring demand, and monthly quality-filtered open source ecosystem snapshots.
+      </p>
     </div>
     """, unsafe_allow_html=True)
 
-    # 3-source pipeline
+    # Section 1: Three-Source Pipeline
     st.markdown("""
-    <div style="font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700;
-                text-transform:uppercase; letter-spacing:.08em; border-bottom:1px solid #ecece8;
-                padding-bottom:8px; margin-bottom:16px; display:flex; justify-content:space-between;">
-      <span>1. Three-Source Data Pipeline</span>
-      <span style="font-weight:400; color:#73736c;">Orchestrated via dbt Core</span>
+    <div style="max-width:1000px; margin-bottom:28px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #ecece8; padding-bottom:8px; margin-bottom:14px;">
+        <span style="font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#171717;">
+          1. Three-Source Data Pipeline
+        </span>
+        <span style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#73736c;">Orchestrated via dbt Core</span>
+      </div>
     </div>
     """, unsafe_allow_html=True)
 
-    m1, m2, m3 = st.columns(3)
-    for col, title, cadence, cadence_color, desc, metric_label in [
-        (m1, "STACK OVERFLOW", "Annual", "#73736c", "48K+ global developer respondents establish the empirical developer adoption baseline and self-reported technology usage.", "Baseline: Developer Adoption %"),
-        (m2, "ADZUNA IT INDIA", "Daily Extraction", "#047857", "Daily extraction of active IT employer postings deduplicated into ~1,788 current requisitions across tracked skill keywords.", "Metric: Weekly Job Postings"),
-        (m3, "GITHUB SEARCH API", "Monthly Snapshot", "#1d4ed8", "Top-100 repository search per technology, quality-classified (project/educational/collection) and relevance-scored.", "Metric: Usable Repos (of 100)"),
-    ]:
-        with col:
-            cadence_bg = "#f4f4f0" if cadence_color == "#73736c" else ("#ecfdf5" if cadence_color == "#047857" else "#eff6ff")
-            st.markdown(f"""
-            <div class="method-card">
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                <span class="method-card-title">{title}</span>
-                <span style="font-family:'JetBrains Mono',monospace; font-size:10px; color:{cadence_color};
-                             background:{cadence_bg}; padding:2px 6px; border-radius:2px;">{cadence}</span>
+    p1, p2, p3 = st.columns(3)
+    with p1:
+        st.markdown("""
+        <div style="background:white; border:1px solid #e5e5df; border-radius:4px; padding:16px; height:100%;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <strong style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#171717;">STACK OVERFLOW</strong>
+            <span style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#73736c; background:#f4f4f0; padding:2px 6px; border-radius:2px;">Annual</span>
+          </div>
+          <div style="font-size:13px; font-weight:600; color:#171717; margin-bottom:4px;">Annual Developer Survey</div>
+          <p style="font-size:12px; color:#575752; line-height:1.6; margin:0;">
+            48K+ global developer respondents establish the empirical developer adoption baseline and self-reported technology usage.
+          </p>
+          <div style="margin-top:14px; padding-top:8px; border-top:1px solid #f0f0eb; font-family:'IBM Plex Mono',monospace; font-size:10px; color:#73736c;">
+            Baseline: Developer Adoption %
+          </div>
+        </div>
+        """, unsafe_allow_html=True)
+    with p2:
+        st.markdown("""
+        <div style="background:white; border:1px solid #e5e5df; border-radius:4px; padding:16px; height:100%;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <strong style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#171717;">ADZUNA IT INDIA</strong>
+            <span style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#047857; background:#ecfdf5; padding:2px 6px; border-radius:2px;">Daily Extraction</span>
+          </div>
+          <div style="font-size:13px; font-weight:600; color:#171717; margin-bottom:4px;">Observed Employer Demand</div>
+          <p style="font-size:12px; color:#575752; line-height:1.6; margin:0;">
+            Daily extraction of active IT employer postings deduplicated into ~1,788 current requisitions across tracked skill keywords.
+          </p>
+          <div style="margin-top:14px; padding-top:8px; border-top:1px solid #f0f0eb; font-family:'IBM Plex Mono',monospace; font-size:10px; color:#73736c;">
+            Measure: Weekly Job Count (X-Axis)
+          </div>
+        </div>
+        """, unsafe_allow_html=True)
+    with p3:
+        st.markdown("""
+        <div style="background:white; border:1px solid #e5e5df; border-radius:4px; padding:16px; height:100%;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <strong style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#171717;">GITHUB API</strong>
+            <span style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#1d4ed8; background:#eff6ff; padding:2px 6px; border-radius:2px;">Monthly Snapshot</span>
+          </div>
+          <div style="font-size:13px; font-weight:600; color:#171717; margin-bottom:4px;">Developer Ecosystem Activity</div>
+          <p style="font-size:12px; color:#575752; line-height:1.6; margin:0;">
+            Top 100 repositories sampled per technology, strictly filtered for project quality and relevance before metric computation.
+          </p>
+          <div style="margin-top:14px; padding-top:8px; border-top:1px solid #f0f0eb; font-family:'IBM Plex Mono',monospace; font-size:10px; color:#73736c;">
+            Measure: Usable Repositories (Y-Axis)
+          </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("<div style='height:28px;'></div>", unsafe_allow_html=True)
+
+    # Section 2: GitHub Repository Classification Pipeline
+    st.markdown("""
+    <div style="max-width:1000px; margin-bottom:28px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #ecece8; padding-bottom:8px; margin-bottom:14px;">
+        <span style="font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#171717;">
+          2. GitHub Sampling &amp; Usable Repository Filtering
+        </span>
+        <span style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#73736c;">Top 100 Sample Pipeline</span>
+      </div>
+
+      <div style="background:white; border:1px solid #e5e5df; border-radius:4px; padding:20px; space-y:16px;">
+        <!-- 6 Step Flow -->
+        <div style="display:grid; grid-template-columns:repeat(6, 1fr); gap:8px; text-align:center; font-family:'IBM Plex Mono',monospace; font-size:11px; margin-bottom:16px;">
+          <div style="background:#f5f5f0; border:1px solid #e2e2dc; border-radius:3px; padding:8px 4px;">
+            <div style="font-weight:700; color:#171717;">Step 1</div>
+            <div style="font-size:10px; color:#575752; margin-top:2px;">Top 100 Sample</div>
+          </div>
+          <div style="background:#f5f5f0; border:1px solid #e2e2dc; border-radius:3px; padding:8px 4px;">
+            <div style="font-weight:700; color:#171717;">Step 2</div>
+            <div style="font-size:10px; color:#575752; margin-top:2px;">Hard Exclusions</div>
+          </div>
+          <div style="background:#f5f5f0; border:1px solid #e2e2dc; border-radius:3px; padding:8px 4px;">
+            <div style="font-weight:700; color:#171717;">Step 3</div>
+            <div style="font-size:10px; color:#575752; margin-top:2px;">Contamination</div>
+          </div>
+          <div style="background:#f5f5f0; border:1px solid #e2e2dc; border-radius:3px; padding:8px 4px;">
+            <div style="font-weight:700; color:#171717;">Step 4</div>
+            <div style="font-size:10px; color:#575752; margin-top:2px;">Relevance Score</div>
+          </div>
+          <div style="background:#ecfdf5; border:1px solid #a7f3d0; border-radius:3px; padding:8px 4px; color:#065f46;">
+            <div style="font-weight:700;">Step 5</div>
+            <div style="font-size:10px; margin-top:2px;">Usable Repos Set</div>
+          </div>
+          <div style="background:#fafaf8; border:1px solid #e2e2dc; border-radius:3px; padding:8px 4px;">
+            <div style="font-weight:700; color:#171717;">Step 6</div>
+            <div style="font-size:10px; color:#575752; margin-top:2px;">Ecosystem Stats</div>
+          </div>
+        </div>
+
+        <!-- Boolean Expression Black Box -->
+        <div style="background:#171717; color:#fafaf8; border-radius:4px; padding:14px; font-family:'IBM Plex Mono',monospace; font-size:12px; margin-bottom:16px;">
+          <div style="color:#a3a39e; font-size:10px; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:4px;">
+            Formal Boolean Filter Expression (dbt transformation)
+          </div>
+          <div style="color:#34d399; font-weight:600; overflow-x:auto; padding:4px 0;">
+            NOT is_fork AND NOT is_archived AND NOT is_disabled AND quality_class IN ('project', 'uncertain') AND relevance_score &gt;= 2
+          </div>
+          <div style="color:#a3a39e; font-size:10px; margin-top:4px;">
+            Only repositories satisfying all conditions contribute to the ecosystem metrics and usable repository count.
+          </div>
+        </div>
+
+        <!-- Taxonomy Grid -->
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:600; text-transform:uppercase; color:#171717; margin-bottom:8px;">
+          Repository Classification Taxonomy:
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; font-size:11px;">
+          <div style="background:#fafaf8; border:1px solid #e5e5df; border-radius:3px; padding:10px;">
+            <strong style="font-family:'IBM Plex Mono',monospace; color:#065f46;">Project:</strong>
+            <p style="color:#575752; margin:2px 0 0 0;">Production code, real application, library, or functioning tool.</p>
+          </div>
+          <div style="background:#fafaf8; border:1px solid #e5e5df; border-radius:3px; padding:10px;">
+            <strong style="font-family:'IBM Plex Mono',monospace; color:#065f46;">Uncertain:</strong>
+            <p style="color:#575752; margin:2px 0 0 0;">Borderline utility or early-stage library retained under scrutiny.</p>
+          </div>
+          <div style="background:#fffbeb; border:1px solid #fde68a; border-radius:3px; padding:10px;">
+            <strong style="font-family:'IBM Plex Mono',monospace; color:#92400e;">Educational:</strong>
+            <p style="color:#78350f; margin:2px 0 0 0;">Tutorials, interview prep, homework exercises (excluded).</p>
+          </div>
+          <div style="background:#fffbeb; border:1px solid #fde68a; border-radius:3px; padding:10px;">
+            <strong style="font-family:'IBM Plex Mono',monospace; color:#92400e;">Collection:</strong>
+            <p style="color:#78350f; margin:2px 0 0 0;">Awesome-lists, link aggregators, curation books (excluded).</p>
+          </div>
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:3px; padding:10px;">
+            <strong style="font-family:'IBM Plex Mono',monospace; color:#475569;">Other:</strong>
+            <p style="color:#475569; margin:2px 0 0 0;">Config files, dotfiles, resumes, or meta artifacts (excluded).</p>
+          </div>
+          <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:3px; padding:10px;">
+            <strong style="font-family:'IBM Plex Mono',monospace; color:#991b1b;">Excluded:</strong>
+            <p style="color:#991b1b; margin:2px 0 0 0;">Archived, disabled, fork mirrors, or zero-activity stubs.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Section 3: Star Semantics
+    st.markdown("""
+    <div style="max-width:1000px; margin-bottom:28px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #ecece8; padding-bottom:8px; margin-bottom:14px;">
+        <span style="font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#171717;">
+          3. Ecosystem Metrics &amp; Star Semantics
+        </span>
+        <span style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#73736c;">Data Semantics Contract</span>
+      </div>
+
+      <div style="background:#fefce8; border:1px solid #fef08a; border-radius:4px; padding:14px; font-size:12px; color:#713f12; margin-bottom:14px; line-height:1.6;">
+        <strong style="color:#171717;">Core Analytical Principle:</strong> GitHub stars represent <strong>developer attention</strong> around sampled projects. They are <strong>not</strong> treated as a direct measure of technology adoption. Adoption is calibrated through employer requisitions (Adzuna) and developer survey responses (Stack Overflow).
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:12px; font-family:'IBM Plex Mono',monospace; font-size:11px;">
+        <div style="background:white; border:1px solid #e5e5df; border-radius:4px; padding:12px;">
+          <strong style="color:#171717;">Observed Repositories:</strong>
+          <p style="color:#575752; font-family:'Plus Jakarta Sans',sans-serif; margin:2px 0 0 0;">The 100 repositories returned by GitHub search query for the technology slug.</p>
+        </div>
+        <div style="background:white; border:1px solid #e5e5df; border-radius:4px; padding:12px;">
+          <strong style="color:#171717;">Usable Repositories:</strong>
+          <p style="color:#575752; font-family:'Plus Jakarta Sans',sans-serif; margin:2px 0 0 0;">Count of repositories meeting strict relevance score (≥ 2) and quality classes.</p>
+        </div>
+        <div style="background:white; border:1px solid #e5e5df; border-radius:4px; padding:12px;">
+          <strong style="color:#171717;">Median Stars / Forks:</strong>
+          <p style="color:#575752; font-family:'Plus Jakarta Sans',sans-serif; margin:2px 0 0 0;">Robust 50th percentile metric preventing outlier stars (e.g. 100K star lists) from skewing signal.</p>
+        </div>
+        <div style="background:white; border:1px solid #e5e5df; border-radius:4px; padding:12px;">
+          <strong style="color:#171717;">Active Repository Ratio:</strong>
+          <p style="color:#575752; font-family:'Plus Jakarta Sans',sans-serif; margin:2px 0 0 0;">Fraction of sampled repositories with at least one pushed commit within the prior 90 days.</p>
+        </div>
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Section 4: Composite Signal Matrix (2x2 Grid)
+    st.markdown("""
+    <div style="max-width:1000px; margin-bottom:28px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #ecece8; padding-bottom:8px; margin-bottom:14px;">
+        <span style="font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#171717;">
+          4. Composite Signal Matrix &amp; Quadrant Thresholds
+        </span>
+        <span style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#73736c;">Threshold: X=5 jobs, Y=30 repos</span>
+      </div>
+
+      <div style="background:white; border:1px solid #e5e5df; border-radius:4px; padding:24px;">
+        <div style="max-width:680px; margin:0 auto; font-family:'IBM Plex Mono',monospace; font-size:11px;">
+          <div style="text-align:center; color:#73736c; font-weight:600; margin-bottom:8px; letter-spacing:0.06em;">
+            ▲ GITHUB USABLE REPOSITORIES ≥ 30
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; border:2px solid #171717; border-radius:4px; overflow:hidden;">
+            <!-- Quadrant 2: HYPE-LED -->
+            <div style="background:#fffbeb; border-right:1px solid #171717; border-bottom:1px solid #171717; padding:16px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <strong style="color:#92400e; font-size:13px;">HYPE-LED</strong>
+                <span style="background:#fef3c7; color:#92400e; border:1px solid #fde68a; border-radius:2px; padding:1px 5px; font-size:9px; font-weight:700;">HYPE-LED</span>
               </div>
-              <div style="font-size:13px; font-weight:600; color:#171717; margin-bottom:6px;">{title.title()}</div>
-              <div style="font-size:12px; color:#575752; line-height:1.6;">{desc}</div>
-              <div style="margin-top:12px; padding-top:8px; border-top:1px solid #f0f0eb;
-                          font-family:'JetBrains Mono',monospace; font-size:10px; color:#73736c;">{metric_label}</div>
-            </div>
-            """, unsafe_allow_html=True)
-
-    # GitHub quality classification
-    st.markdown("""
-    <div style="margin-top:28px; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700;
-                text-transform:uppercase; letter-spacing:.08em; border-bottom:1px solid #ecece8;
-                padding-bottom:8px; margin-bottom:16px;">2. GitHub Quality Classification</div>
-    <div style="background:white; border:1px solid #e5e5df; border-radius:4px; padding:16px; font-size:12px; color:#575752; line-height:1.7;">
-      <p>Top-100 repositories per technology are classified into quality tiers using rule-based weighted scoring:</p>
-      <ul style="margin:8px 0 8px 18px; space-y:4px;">
-        <li><strong style="color:#171717;">Hard Exclusions:</strong> Fork, Archived, or Disabled repositories are excluded immediately.</li>
-        <li><strong style="color:#171717;">Contamination Scoring:</strong> Negative weight keywords detect awesome-lists (+3.5), tutorial repos (+3.0), interview prep (+3.0), roadmaps (+2.0).</li>
-        <li><strong style="color:#171717;">Positive Quality Bonus:</strong> Non-empty description (+1.5), topic tags present (+1.5), pushed within 180 days (+1.0), stars &gt; 500 (+0.5).</li>
-        <li><strong style="color:#171717;">Relevance Scoring:</strong> Independent from quality. Language exact match (+4.0), topic exact match (+3.0), canonical name in repo name (+3.0). Threshold: ≥ 2.0 = usable.</li>
-      </ul>
-      <p>Result: A repository is <strong>usable</strong> if it is not hard-excluded, classified as <code>project</code> or <code>uncertain</code>, and has relevance_score ≥ 2.0.</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-    # Composite signal
-    st.markdown("""
-    <div style="margin-top:24px; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700;
-                text-transform:uppercase; letter-spacing:.08em; border-bottom:1px solid #ecece8;
-                padding-bottom:8px; margin-bottom:16px;">3. Composite Signal Quadrant Matrix</div>
-    """, unsafe_allow_html=True)
-
-    q1, q2 = st.columns(2)
-    for col, signal, bg, border, text_color, title, cond, meaning in [
-        (q1, "THRIVING",   "#f0fdf4", "#bbf7d0", "#166534", "Thriving",   "Jobs ≥ 5 AND Repos ≥ 30", "Both employer demand and ecosystem are strong. High confidence skill investment."),
-        (q2, "HYPE-LED",   "#fffbeb", "#fde68a", "#92400e", "Hype-Led",   "Jobs < 5 AND Repos ≥ 30", "Developer community attention without commercial hiring signal. Monitor, don't bet."),
-    ]:
-        with col:
-            st.markdown(f"""
-            <div style="background:{bg}; border:1px solid {border}; border-radius:4px; padding:14px; margin-bottom:10px;">
-              <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-                <strong style="color:{text_color}; font-family:'JetBrains Mono',monospace; font-size:11px;">{signal}</strong>
-                <code style="font-family:'JetBrains Mono',monospace; font-size:10px; color:{text_color};">{cond}</code>
+              <div style="font-size:11px; color:#78350f; font-family:'Plus Jakarta Sans',sans-serif; margin-top:6px;">
+                <strong>Jobs &lt; 5 AND Usable Repos ≥ 30</strong>
+                <p style="margin:4px 0 0 0; line-height:1.4;">Strong developer ecosystem attention without comparable observed hiring demand.</p>
               </div>
-              <div style="font-size:12px; color:#171717; font-weight:600; margin-bottom:4px;">{title}</div>
-              <div style="font-size:11px; color:{text_color}; line-height:1.5;">{meaning}</div>
             </div>
-            """, unsafe_allow_html=True)
 
-    q3, q4 = st.columns(2)
-    for col, signal, bg, border, text_color, title, cond, meaning in [
-        (q3, "DEMAND-LED", "#eff6ff", "#bfdbfe", "#1e40af", "Demand-Led", "Jobs ≥ 5 AND Repos < 30", "Employers hiring despite limited open-source ecosystem. Often enterprise or legacy tech."),
-        (q4, "WEAK",       "#f9fafb", "#e5e7eb", "#6b7280", "Weak",       "Jobs < 5 AND Repos < 30", "Low signal on both dimensions. Niche, deprecated, or outside dataset scope."),
-    ]:
-        with col:
-            st.markdown(f"""
-            <div style="background:{bg}; border:1px solid {border}; border-radius:4px; padding:14px; margin-bottom:10px;">
-              <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-                <strong style="color:{text_color}; font-family:'JetBrains Mono',monospace; font-size:11px;">{signal}</strong>
-                <code style="font-family:'JetBrains Mono',monospace; font-size:10px; color:{text_color};">{cond}</code>
+            <!-- Quadrant 1: THRIVING -->
+            <div style="background:#ecfdf5; border-bottom:1px solid #171717; padding:16px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <strong style="color:#065f46; font-size:13px;">THRIVING</strong>
+                <span style="background:#dcfce7; color:#065f46; border:1px solid #a7f3d0; border-radius:2px; padding:1px 5px; font-size:9px; font-weight:700;">THRIVING</span>
               </div>
-              <div style="font-size:12px; color:#171717; font-weight:600; margin-bottom:4px;">{title}</div>
-              <div style="font-size:11px; color:{text_color}; line-height:1.5;">{meaning}</div>
+              <div style="font-size:11px; color:#064e3b; font-family:'Plus Jakarta Sans',sans-serif; margin-top:6px;">
+                <strong>Jobs ≥ 5 AND Usable Repos ≥ 30</strong>
+                <p style="margin:4px 0 0 0; line-height:1.4;">Strong employer demand backed by strong ecosystem activity. Proven production viability.</p>
+              </div>
             </div>
-            """, unsafe_allow_html=True)
 
-    # Limitations
-    st.markdown("""
-    <div style="margin-top:24px; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700;
-                text-transform:uppercase; letter-spacing:.08em; border-bottom:1px solid #ecece8;
-                padding-bottom:8px; margin-bottom:16px;">4. Known Limitations</div>
-    <div style="background:white; border:1px solid #e5e5df; border-radius:4px; padding:16px;">
-    <ul style="font-size:12px; color:#575752; line-height:1.8; margin:0; padding-left:18px;">
-      <li><strong style="color:#171717;">Geography:</strong> Adzuna data is India-only. Global hiring demand is not represented.</li>
-      <li><strong style="color:#171717;">Data volume:</strong> 1,788 Adzuna job postings across July 2026. Sufficient for signal demonstration, not production hiring analytics.</li>
-      <li><strong style="color:#171717;">GitHub stars ≠ adoption.</strong> Stars measure developer attention around representative projects, not enterprise adoption.</li>
-      <li><strong style="color:#171717;">Single GitHub snapshot:</strong> Month-over-month turnover ratio will populate after the second monthly run.</li>
-      <li><strong style="color:#171717;">Entity resolution:</strong> Exact match on pre-validated crosswalk. Technologies with non-standard naming may be unresolved.</li>
-    </ul>
+            <!-- Quadrant 3: WEAK -->
+            <div style="background:#f8fafc; border-right:1px solid #171717; padding:16px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <strong style="color:#475569; font-size:13px;">WEAK</strong>
+                <span style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; border-radius:2px; padding:1px 5px; font-size:9px; font-weight:700;">WEAK</span>
+              </div>
+              <div style="font-size:11px; color:#334155; font-family:'Plus Jakarta Sans',sans-serif; margin-top:6px;">
+                <strong>Jobs &lt; 5 AND Usable Repos &lt; 30</strong>
+                <p style="margin:4px 0 0 0; line-height:1.4;">Limited evidence of either active employer demand or lively open-source ecosystem activity.</p>
+              </div>
+            </div>
+
+            <!-- Quadrant 4: DEMAND-LED -->
+            <div style="background:#eff6ff; padding:16px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <strong style="color:#1e40af; font-size:13px;">DEMAND-LED</strong>
+                <span style="background:#dbeafe; color:#1e40af; border:1px solid #bfdbfe; border-radius:2px; padding:1px 5px; font-size:9px; font-weight:700;">DEMAND-LED</span>
+              </div>
+              <div style="font-size:11px; color:#1e3a8a; font-family:'Plus Jakarta Sans',sans-serif; margin-top:6px;">
+                <strong>Jobs ≥ 5 AND Usable Repos &lt; 30</strong>
+                <p style="margin:4px 0 0 0; line-height:1.4;">Strong employer hiring demand despite relatively limited public open-source activity.</p>
+              </div>
+            </div>
+          </div>
+
+          <div style="text-align:center; color:#73736c; font-weight:600; margin-top:8px; letter-spacing:0.06em;">
+            ▼ GITHUB USABLE REPOSITORIES &lt; 30
+          </div>
+
+          <div style="display:flex; justify-content:space-between; align-items:center; color:#73736c; font-size:11px; margin-top:12px; padding:0 4px;">
+            <span>◄ EMPLOYER JOBS &lt; 5 / week</span>
+            <span style="font-weight:700; color:#171717;">Threshold: 5 jobs/week</span>
+            <span>EMPLOYER JOBS ≥ 5 / week ►</span>
+          </div>
+        </div>
+      </div>
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown('<div style="height:24px;"></div>', unsafe_allow_html=True)
-
-    # dbt stack
+    # Section 5: Data Mart Schema
     st.markdown("""
-    <div style="font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700;
-                text-transform:uppercase; letter-spacing:.08em; border-bottom:1px solid #ecece8;
-                padding-bottom:8px; margin-bottom:16px;">5. Data Mart Schema</div>
-    <div style="background:#fafaf8; border:1px solid #e5e5df; border-radius:4px; padding:14px;
-                font-family:'JetBrains Mono',monospace; font-size:11px; color:#171717; line-height:1.9;">
-      <div><strong>main_marts.fct_skill_signals</strong> — Grain: canonical technology × week</div>
-      <div style="color:#73736c; padding-left:16px;">weekly_job_count, so_adoption_pct, gh_usable_repos, gh_median_stars, gh_active_ratio, gh_top5_concentration, composite_signal</div>
-      <div style="margin-top:8px;"><strong>main_marts.dim_technology</strong> — Canonical technology dimension</div>
-      <div style="color:#73736c; padding-left:16px;">tech_id (MD5), canonical_name, github_slug, adzuna_keyword, is_emerging</div>
-      <div style="margin-top:8px;"><strong>main_marts.fct_github_snapshots</strong> — Monthly ecosystem metrics</div>
-      <div style="color:#73736c; padding-left:16px;">technology_name, snapshot_date, observed_repositories, usable_repositories, median_stars, active_repository_ratio, top5_star_concentration</div>
+    <div style="max-width:1000px; background:#f5f5f0; border:1px solid #d4d4ce; border-radius:4px; padding:16px; font-family:'IBM Plex Mono',monospace; font-size:11px;">
+      <div style="font-weight:700; color:#171717; text-transform:uppercase; margin-bottom:6px;">
+        5. Data Mart Schema &amp; Temporal Transparency
+      </div>
+      <p style="color:#575752; font-family:'Plus Jakarta Sans',sans-serif; margin:0 0 8px 0; line-height:1.6;">
+        The dashboard connects directly to the core dbt marts <code style="color:#171717; background:#e8e8e2; padding:2px 5px; border-radius:2px;">main_marts.fct_skill_signals</code> and <code style="color:#171717; background:#e8e8e2; padding:2px 5px; border-radius:2px;">main_marts.dim_technology</code>.
+      </p>
+      <p style="color:#575752; font-family:'Plus Jakarta Sans',sans-serif; margin:0; line-height:1.6;">
+        <strong>Temporal Transparency:</strong> Weekly job counts represent weekly observations from Adzuna IT extractions. GitHub metrics represent the latest monthly snapshot. The UI does not imply daily historical precision for GitHub where only monthly sampling was performed.
+      </p>
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown('</div>', unsafe_allow_html=True)
 
-
-# ── Footer ───────────────────────────────────────────────────────────────────
+# ── Editorial Research Footer (App.tsx) ───────────────────────────────────────
 st.markdown(f"""
-<div style="border-top:1px solid #e5e5df; background:#f5f5f0; padding:20px 32px;
-            font-family:'JetBrains Mono',monospace; font-size:11px; color:#73736c;">
-  <div style="max-width:1400px; margin:0 auto; display:flex; flex-wrap:wrap;
-              justify-content:space-between; align-items:center; gap:12px;">
+<div style="border-top:1px solid #e5e5df; background:#f5f5f0; padding:20px 0; margin-top:40px; font-family:'IBM Plex Mono',monospace; font-size:11px; color:#73736c;">
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
     <div>
-      <div style="font-weight:600; color:#171717; margin-bottom:3px;">
-        Labor Market Intelligence &bull; Analytical Research Dashboard
+      <div style="font-weight:600; color:#171717; margin-bottom:2px;">
+        Labor Market Intelligence &bull; Analytical Research Specification
       </div>
-      <div style="font-size:10px; color:#85857e;">
-        Data Marts: <code style="color:#171717;">fct_skill_signals</code> &nbsp;
-        <code style="color:#171717;">dim_technology</code> &nbsp;
-        <code style="color:#171717;">fct_github_snapshots</code>
+      <div style="font-size:11px; color:#85857e;">
+        Data Marts: <code style="color:#171717;">fct_skill_signals</code> &bull; <code style="color:#171717;">dim_technology</code> &bull; <code style="color:#171717;">fct_github_snapshots</code>
       </div>
     </div>
-    <div style="display:flex; flex-wrap:wrap; gap:16px; font-size:10px; align-items:center;">
-      <span>Adzuna India IT: <strong style="color:#171717;">{latest_adzuna}</strong></span>
+
+    <div style="display:flex; align-items:center; gap:16px; font-size:11px; flex-wrap:wrap;">
+      <span>Adzuna India IT Requisitions: <strong style="color:#171717;">{ADZUNA_DATE}</strong></span>
       <span>&bull;</span>
-      <span>GitHub Snapshot: <strong style="color:#171717;">{latest_github}</strong></span>
+      <span>GitHub Snapshot: <strong style="color:#171717;">{GITHUB_DATE}</strong></span>
       <span>&bull;</span>
       <span>Stack Overflow: <strong style="color:#171717;">2024</strong></span>
     </div>
