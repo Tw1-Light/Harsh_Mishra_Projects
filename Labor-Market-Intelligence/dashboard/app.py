@@ -79,7 +79,7 @@ def load_snapshots() -> pd.DataFrame:
         return pd.DataFrame()
     df = con.execute("""
         SELECT *
-        FROM main_staging.stg_github_snapshots
+        FROM main_marts.fct_github_snapshots
         ORDER BY technology_name, snapshot_date
     """).df()
     con.close()
