@@ -241,6 +241,16 @@ def badge_html(signal: str) -> str:
     return f'<span class="{cls}">{lbl}</span>'
 
 
+def safe_int(v, fallback: str = "—") -> str:
+    """Convert possibly-NaN numeric to int string."""
+    try:
+        if pd.isna(v):
+            return fallback
+        return str(int(v))
+    except (TypeError, ValueError):
+        return fallback
+
+
 def signal_color(signal: str) -> str:
     return {
         "thriving":   "#16a34a",
@@ -484,12 +494,13 @@ with tab_overview:
         top_eco = df_latest.nlargest(6, "gh_usable_repos")
         rows2 = ""
         for _, r in top_eco.iterrows():
-            stars_k = f"{r['gh_median_stars']/1000:.1f}K" if r['gh_median_stars'] >= 1000 else str(int(r['gh_median_stars']))
+            stars_k = f"{r['gh_median_stars']/1000:.1f}K" if pd.notna(r['gh_median_stars']) and r['gh_median_stars'] >= 1000 else safe_int(r['gh_median_stars'])
+            act_pct = f"{int(r['gh_active_ratio']*100)}%" if pd.notna(r['gh_active_ratio']) else "—"
             rows2 += f"""<tr>
               <td style="padding:7px 0; font-weight:600;">{r['canonical_name']}</td>
-              <td style="padding:7px 0; text-align:right; font-weight:700;">{int(r['gh_usable_repos'])}</td>
+              <td style="padding:7px 0; text-align:right; font-weight:700;">{safe_int(r['gh_usable_repos'])}</td>
               <td style="padding:7px 0; text-align:right; color:#575752;">{stars_k}</td>
-              <td style="padding:7px 0; text-align:right;">{int(r['gh_active_ratio']*100)}%</td>
+              <td style="padding:7px 0; text-align:right;">{act_pct}</td>
             </tr>"""
         st.markdown(f"""
         <div style="background:white; border:1px solid #e5e5df; border-radius:4px; padding:16px;">
@@ -520,7 +531,7 @@ with tab_overview:
                 {badge_html('demand_led')}
               </div>
               <div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#4b5563; margin-top:3px;">
-                {int(r['weekly_job_count'])} jobs/week &bull; {int(r['gh_usable_repos'])} usable repos
+                {safe_int(r['weekly_job_count'])} jobs/week &bull; {safe_int(r['gh_usable_repos'])} usable repos
               </div>
               <div style="font-size:11px; color:#1e3a8a; margin-top:4px; line-height:1.5;">
                 Strong hiring demand with comparatively limited ecosystem activity.
@@ -533,7 +544,7 @@ with tab_overview:
                 {badge_html('hype_led')}
               </div>
               <div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#4b5563; margin-top:3px;">
-                {int(r['weekly_job_count'])} jobs/week &bull; {int(r['gh_usable_repos'])} usable repos
+                {safe_int(r['weekly_job_count'])} jobs/week &bull; {safe_int(r['gh_usable_repos'])} usable repos
               </div>
               <div style="font-size:11px; color:#92400e; margin-top:4px; line-height:1.5;">
                 Strong ecosystem attention without comparable observed hiring demand.
@@ -592,14 +603,14 @@ with tab_explorer:
     # Table
     rows = ""
     for _, r in df_filtered.iterrows():
-        stars_k = f"{r['gh_median_stars']/1000:.1f}K" if r['gh_median_stars'] >= 1000 else str(int(r['gh_median_stars']))
+        stars_k = f"{r['gh_median_stars']/1000:.1f}K" if pd.notna(r['gh_median_stars']) and r['gh_median_stars'] >= 1000 else safe_int(r['gh_median_stars'])
         so_pct  = f"{r['so_adoption_pct']:.1f}%" if pd.notna(r['so_adoption_pct']) else "—"
         act     = f"{int(r['gh_active_ratio']*100)}%" if pd.notna(r['gh_active_ratio']) else "—"
         emg     = '<span style="font-size:9px;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;border-radius:2px;padding:1px 5px;font-family:monospace;">NEW</span>' if r['is_emerging'] else ""
         rows += f"""<tr>
           <td style="padding:8px 0; font-weight:600;">{r['canonical_name']} {emg}</td>
-          <td style="padding:8px 0; text-align:right; font-weight:700;">{int(r['weekly_job_count'])}</td>
-          <td style="padding:8px 0; text-align:right;">{int(r['gh_usable_repos'])}</td>
+          <td style="padding:8px 0; text-align:right; font-weight:700;">{safe_int(r['weekly_job_count'])}</td>
+          <td style="padding:8px 0; text-align:right;">{safe_int(r['gh_usable_repos'])}</td>
           <td style="padding:8px 0; text-align:right; color:#575752;">{stars_k}</td>
           <td style="padding:8px 0; text-align:right;">{act}</td>
           <td style="padding:8px 0; text-align:right;">{so_pct}</td>
@@ -702,9 +713,9 @@ with tab_signalmap:
 
         if inspect_row is not None:
             r = inspect_row
-            jdir = "≥ 5 ↑" if r['weekly_job_count'] >= 5 else "< 5 ↓"
-            gdir = "≥ 30 ↑" if r['gh_usable_repos'] >= 30 else "< 30 ↓"
-            stars_k = f"{r['gh_median_stars']/1000:.1f}K" if r['gh_median_stars'] >= 1000 else str(int(r['gh_median_stars']))
+            jdir = "≥ 5 ↑" if pd.notna(r['weekly_job_count']) and r['weekly_job_count'] >= 5 else "< 5 ↓"
+            gdir = "≥ 30 ↑" if pd.notna(r['gh_usable_repos']) and r['gh_usable_repos'] >= 30 else "< 30 ↓"
+            stars_k = f"{r['gh_median_stars']/1000:.1f}K" if pd.notna(r['gh_median_stars']) and r['gh_median_stars'] >= 1000 else safe_int(r['gh_median_stars'])
             so_val = f"{r['so_adoption_pct']:.1f}%" if pd.notna(r['so_adoption_pct']) else "—"
             act_val = f"{int(r['gh_active_ratio']*100)}%" if pd.notna(r['gh_active_ratio']) else "—"
 
@@ -725,8 +736,8 @@ with tab_signalmap:
                 </div>
               </div>
               <div style="background:#fafaf8; border:1px solid #e8e8e2; border-radius:4px; padding:12px; margin-bottom:12px;">
-                <div class="inspector-metric-row"><span class="inspector-metric-label">Employer Demand:</span><span class="inspector-metric-value">{int(r['weekly_job_count'])} jobs/week</span></div>
-                <div class="inspector-metric-row"><span class="inspector-metric-label">GitHub Ecosystem:</span><span class="inspector-metric-value">{int(r['gh_usable_repos'])} usable repos</span></div>
+                <div class="inspector-metric-row"><span class="inspector-metric-label">Employer Demand:</span><span class="inspector-metric-value">{safe_int(r['weekly_job_count'])} jobs/week</span></div>
+                <div class="inspector-metric-row"><span class="inspector-metric-label">GitHub Ecosystem:</span><span class="inspector-metric-value">{safe_int(r['gh_usable_repos'])} usable repos</span></div>
                 <div class="inspector-metric-row"><span class="inspector-metric-label">Stack Overflow:</span><span class="inspector-metric-value">{so_val}</span></div>
                 <div class="inspector-metric-row"><span class="inspector-metric-label">Active Repositories:</span><span class="inspector-metric-value">{act_val}</span></div>
                 <div class="inspector-metric-row"><span class="inspector-metric-label">Median Stars:</span><span class="inspector-metric-value">{stars_k}</span></div>
