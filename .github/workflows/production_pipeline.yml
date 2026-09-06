@@ -39,13 +39,13 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
           cache: "pip"
 
-      - name: Install dependencies
+      - name: Install pipeline dependencies
         run: |
           pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install dbt-core==1.11.12 dbt-duckdb==1.10.1 duckdb pandas pyarrow requests python-dotenv
 
       - name: Cache Stack Overflow Survey Parquet
         id: cache-so-survey
@@ -59,7 +59,7 @@ jobs:
         run: |
           echo "Fetching and preparing Stack Overflow Developer Survey..."
           python raw/stackoverflow/get_data.py
-          python -c "from raw.prepare_raw import build_survey_parquet; build_survey_parquet()"
+          python raw/prepare_raw.py
           if [ -f raw/stackoverflow/survey_result.csv ]; then
             rm raw/stackoverflow/survey_result.csv
           fi
