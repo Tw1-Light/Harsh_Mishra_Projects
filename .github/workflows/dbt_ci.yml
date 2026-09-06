@@ -21,29 +21,29 @@ jobs:
           cache: "pip"
 
       - name: Install dependencies
-        run: pip install dbt-core dbt-duckdb dbt-utils pandas pyarrow
+        run: pip install dbt-core dbt-duckdb dbt-utils pandas pyarrow duckdb
 
       - name: Prepare raw parquet files
-        working-directory: Harsh_Mishra_Projects/Labor-Market-Intelligence
+        working-directory: Labor-Market-Intelligence
         env:
-          PROJECT_ROOT: ${{ github.workspace }}/Harsh_Mishra_Projects/Labor-Market-Intelligence
+          PROJECT_ROOT: ${{ github.workspace }}/Labor-Market-Intelligence
         run: |
           # In CI: survey CSV and adzuna JSONs may not exist (they're .gitignored).
           # Build stub parquets so dbt can parse and test schema without real data.
           python scripts/ci_stub_data.py
 
       - name: Install dbt packages
-        working-directory: Harsh_Mishra_Projects/Labor-Market-Intelligence/dbt
+        working-directory: Labor-Market-Intelligence/dbt
         run: dbt deps --profiles-dir . --project-dir .
 
       - name: dbt run
-        working-directory: Harsh_Mishra_Projects/Labor-Market-Intelligence
+        working-directory: Labor-Market-Intelligence
         env:
-          PROJECT_ROOT: ${{ github.workspace }}/Harsh_Mishra_Projects/Labor-Market-Intelligence
+          PROJECT_ROOT: ${{ github.workspace }}/Labor-Market-Intelligence
         run: dbt run --profiles-dir dbt --project-dir dbt
 
       - name: dbt test
-        working-directory: Harsh_Mishra_Projects/Labor-Market-Intelligence
+        working-directory: Labor-Market-Intelligence
         env:
-          PROJECT_ROOT: ${{ github.workspace }}/Harsh_Mishra_Projects/Labor-Market-Intelligence
+          PROJECT_ROOT: ${{ github.workspace }}/Labor-Market-Intelligence
         run: dbt test --profiles-dir dbt --project-dir dbt

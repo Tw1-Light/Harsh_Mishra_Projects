@@ -1,0 +1,109 @@
+name: Production Data Pipeline
+
+on:
+  schedule:
+    # Daily at 02:00 IST (20:30 UTC previous day)
+    - cron: '30 20 * * *'
+  workflow_dispatch:
+    inputs:
+      force_github_refresh:
+        description: 'Force monthly GitHub snapshot extraction'
+        required: false
+        type: boolean
+        default: false
+      force_so_refresh:
+        description: 'Force download and rebuild of Stack Overflow survey parquet'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  run-pipeline:
+    name: Ingestion & MotherDuck Marts
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Labor-Market-Intelligence
+
+    env:
+      PROJECT_ROOT: ${{ github.workspace }}/Labor-Market-Intelligence
+      MotherDuck_token: ${{ secrets.MotherDuck_token }}
+      Adzuna_app_id: ${{ secrets.Adzuna_app_id }}
+      Adzuna_api: ${{ secrets.Adzuna_api }}
+      GitHub_access_token: ${{ secrets.GitHub_access_token || secrets.GITHUB_TOKEN }}
+      GITHUB_ACCESS_TOKEN: ${{ secrets.GitHub_access_token || secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Cache Stack Overflow Survey Parquet
+        id: cache-so-survey
+        uses: actions/cache@v4
+        with:
+          path: Labor-Market-Intelligence/raw/stackoverflow/filtered_survey.parquet
+          key: so-filtered-survey-v2025
+
+      - name: Build Stack Overflow Survey (if cache miss)
+        if: steps.cache-so-survey.outputs.cache-hit != 'true' || inputs.force_so_refresh == true
+        run: |
+          echo "Fetching and preparing Stack Overflow Developer Survey..."
+          python raw/stackoverflow/get_data.py
+          python -c "from raw.prepare_raw import build_survey_parquet; build_survey_parquet()"
+          if [ -f raw/stackoverflow/survey_result.csv ]; then
+            rm raw/stackoverflow/survey_result.csv
+          fi
+
+      - name: Extract Adzuna Job Postings (Daily)
+        run: |
+          echo "Running daily Adzuna job extraction..."
+          python raw/adzuna/daily_data.py || true
+          python raw/adzuna/build_adzuna_csv.py
+
+      - name: Extract GitHub Ecosystem Snapshots (Monthly)
+        run: |
+          DAY=$(date +%d)
+          if [ "$DAY" = "01" ] || [ "${{ inputs.force_github_refresh }}" = "true" ]; then
+            echo "Executing monthly GitHub snapshot extraction..."
+            python raw/github/github_extractor.py
+          else
+            echo "Today is day $DAY (not 01). Skipping GitHub extractor."
+          fi
+
+      - name: Consolidate Raw Parquet Datasets
+        run: |
+          echo "Consolidating Parquet datasets for dbt ingestion..."
+          python raw/prepare_raw.py
+
+      - name: Install dbt packages
+        run: dbt deps --profiles-dir dbt --project-dir dbt
+
+      - name: Run dbt against MotherDuck (Production)
+        run: dbt run --target prod --profiles-dir dbt --project-dir dbt
+
+      - name: Run dbt Data Quality Tests (Production)
+        run: dbt test --target prod --profiles-dir dbt --project-dir dbt
+
+      - name: Pipeline Health Summary
+        run: |
+          python -c "
+          import duckdb, os
+          token = os.getenv('MotherDuck_token', '')
+          if token:
+              con = duckdb.connect(f'md:labor_market?motherduck_token={token}')
+              count = con.execute('SELECT COUNT(*) FROM main_marts.fct_skill_signals').fetchone()[0]
+              print(f'SUCCESS: main_marts.fct_skill_signals updated. Total rows: {count}')
+          else:
+              print('WARNING: MotherDuck_token not set. Verified syntax only.')
+          "
