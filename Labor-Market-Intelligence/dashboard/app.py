@@ -129,6 +129,21 @@ DIVERGENCE_NOTES = {
     "Angular": "Established corporate frontend framework with sustained enterprise maintenance demand.",
 }
 
+# ── HTML Safe Rendering Helper ──────────────────────────────────────────────
+def render_html(html_str: str):
+    """
+    Renders HTML safely without CommonMark treating indented lines as code blocks.
+    Strips leading whitespace, removes blank lines, and removes comments.
+    """
+    lines = []
+    for line in html_str.splitlines():
+        s = line.strip()
+        if not s or s.startswith("<!--"):
+            continue
+        lines.append(s)
+    st.markdown(" ".join(lines), unsafe_allow_html=True)
+
+
 # ── Global CSS: Editorial Light Theme ─────────────────────────────────────────
 st.markdown("""
 <style>
@@ -655,10 +670,9 @@ def build_quadrant_plot(
 
 
 # ── Persistent Brand & Freshness Header (Header.tsx) ─────────────────────────
-st.markdown(f"""
+render_html(f"""
 <div style="background:#fbfbfa; border-bottom:1px solid #e5e5df; padding:10px 0; margin-bottom:12px;">
   <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
-    <!-- Left: Brand Title -->
     <div style="display:flex; align-items:center; gap:10px;">
       <span style="display:inline-block; width:8px; height:8px; background:#171717; border-radius:2px;"></span>
       <span style="font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:#171717;">
@@ -669,8 +683,6 @@ st.markdown(f"""
         Technology demand vs developer ecosystem signals
       </span>
     </div>
-
-    <!-- Right: Freshness Badges -->
     <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; font-family:'IBM Plex Mono',monospace; font-size:11px;">
       <div style="display:inline-flex; align-items:center; gap:6px; background:#f4f4f0; border:1px solid #e2e2dc; border-radius:3px; padding:2px 8px; color:#52524d;">
         <span style="width:6px; height:6px; border-radius:50%; background:#059669;"></span>
@@ -690,7 +702,7 @@ st.markdown(f"""
     </div>
   </div>
 </div>
-""", unsafe_allow_html=True)
+""")
 
 
 # ── Primary Navigation Tabs ──────────────────────────────────────────────────
@@ -707,7 +719,7 @@ tab_overview, tab_explorer, tab_signalmap, tab_methodology = st.tabs([
 # ════════════════════════════════════════════════════════════════════════════
 with tab_overview:
     # Editorial Lead Header
-    st.markdown(f"""
+    render_html(f"""
     <div style="border-bottom:1px solid #e5e5df; padding-bottom:18px; margin-bottom:20px;">
       <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#73736c; margin-bottom:4px;">
         Research Briefing • Labor Market Intelligence
@@ -719,47 +731,47 @@ with tab_overview:
         Synthesizing <strong>{TOTAL_JOBS:,}</strong> observed IT employer job postings against Top-100 quality-classified GitHub repositories and 48K+ developer survey responses to distinguish genuine commercial hiring from ecosystem hype.
       </p>
     </div>
-    """, unsafe_allow_html=True)
+    """)
 
     # 4 KPI Stat Blocks
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.markdown(f"""
+        render_html(f"""
         <div class="kpi-block">
           <div class="kpi-num">{TOTAL_TECHS}</div>
           <div class="kpi-title">Technologies Tracked</div>
           <div class="kpi-sub">Cross-referenced taxonomy</div>
         </div>
-        """, unsafe_allow_html=True)
+        """)
     with col2:
-        st.markdown(f"""
+        render_html(f"""
         <div class="kpi-block">
           <div class="kpi-num">1,788</div>
           <div class="kpi-title">Job Postings</div>
           <div class="kpi-sub">Adzuna India IT deduplicated</div>
         </div>
-        """, unsafe_allow_html=True)
+        """)
     with col3:
-        st.markdown("""
+        render_html("""
         <div class="kpi-block">
           <div class="kpi-num">48K+</div>
           <div class="kpi-title">Developer Responses</div>
           <div class="kpi-sub">Stack Overflow baseline</div>
         </div>
-        """, unsafe_allow_html=True)
+        """)
     with col4:
-        st.markdown("""
+        render_html("""
         <div class="kpi-block">
           <div class="kpi-num">100</div>
           <div class="kpi-title">GitHub Repos Sampled</div>
           <div class="kpi-sub">Per technology, quality-scored</div>
         </div>
-        """, unsafe_allow_html=True)
+        """)
 
-    st.markdown("<div style='height:24px;'></div>", unsafe_allow_html=True)
+    render_html("<div style='height:24px;'></div>")
 
     # Main Section: Technology Signal Map
-    st.markdown("""
+    render_html("""
     <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px;">
       <div>
         <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#171717;">
@@ -770,10 +782,10 @@ with tab_overview:
         </div>
       </div>
     </div>
-    """, unsafe_allow_html=True)
+    """)
 
     # Quadrant Top Frame
-    st.markdown(f"""
+    render_html(f"""
     <div style="background:#f4f4f0; border:1px solid #e5e5df; border-bottom:none; border-radius:4px 4px 0 0; padding:8px 16px; display:flex; justify-content:space-between; align-items:center; font-family:'IBM Plex Mono',monospace; font-size:11px;">
       <div>
         <strong style="color:#171717;">Signal Quadrants</strong> &bull; <span style="color:#575752;">Showing {TOTAL_TECHS} technologies</span>
@@ -785,25 +797,25 @@ with tab_overview:
         <span><span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:#64748b; margin-right:4px;"></span>Weak</span>
       </div>
     </div>
-    """, unsafe_allow_html=True)
+    """)
 
     st.plotly_chart(build_quadrant_plot(df_techs, height=520), use_container_width=True, config={"displayModeBar": False})
 
     # Quadrant Bottom Frame
-    st.markdown("""
+    render_html("""
     <div style="background:#f4f4f0; border:1px solid #e5e5df; border-top:none; border-radius:0 0 4px 4px; padding:6px 16px; margin-top:-10px; margin-bottom:28px; display:flex; justify-content:space-between; font-family:'IBM Plex Mono',monospace; font-size:11px; color:#52524d;">
       <div><strong>Analytical Thresholds:</strong> Employer demand ≥ 5 jobs/week | GitHub ecosystem ≥ 30 usable repos</div>
       <div style="color:#73736c;">Calibrated square-root X-axis for low-frequency demand distinction</div>
     </div>
-    """, unsafe_allow_html=True)
+    """)
 
     # Market Movement Section (3 Columns)
-    st.markdown("""
+    render_html("""
     <div style="border-bottom:1px solid #e5e5df; padding-bottom:8px; margin-bottom:16px;">
       <h3 style="font-size:16px; font-weight:700; color:#171717; margin:0 0 4px 0;">Market Movement &amp; Analytical Divergence</h3>
       <p style="font-size:12px; color:#666660; margin:0;">Dissecting weekly employer requisitions against open-source repository traction</p>
     </div>
-    """, unsafe_allow_html=True)
+    """)
 
     col_m1, col_m2, col_m3 = st.columns(3)
 
@@ -819,7 +831,7 @@ with tab_overview:
               <td style="text-align:right;">{render_signal_badge(r['composite_signal'], size='sm', show_dot=False)}</td>
             </tr>"""
 
-        st.markdown(f"""
+        render_html(f"""
         <div style="background:white; border:1px solid #e5e5df; border-radius:4px; padding:16px; height:100%;">
           <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #ecece8; padding-bottom:8px; margin-bottom:12px;">
             <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#171717;">
@@ -844,14 +856,14 @@ with tab_overview:
             Weekly postings across observed hiring demand
           </div>
         </div>
-        """, unsafe_allow_html=True)
+        """)
 
     # Table 2: Ecosystem Attention
     with col_m2:
         top_eco = df_techs.nlargest(6, "gh_usable_repos")
         eco_rows = ""
         for _, r in top_eco.iterrows():
-            stars_k = f"{r['gh_median_stars']/1000:.1f}K" if r["gh_median_stars"] >= 1000 else f"{int(r['gh_median_stars'])}"
+            stars_k = f"{r['gh_median_stars']/1000:.1f}K" if r["gh_median_stars"] >= 1000 else f"{int(row_val if (row_val := r['gh_median_stars']) == row_val else 0)}"
             act_pct = f"{int(r['gh_active_ratio']*100)}%" if r["gh_active_ratio"] > 0 else "—"
             eco_rows += f"""<tr>
               <td style="font-weight:600;">{r['canonical_name']}</td>
@@ -860,7 +872,7 @@ with tab_overview:
               <td style="text-align:right; font-weight:600;">{act_pct}</td>
             </tr>"""
 
-        st.markdown(f"""
+        render_html(f"""
         <div style="background:white; border:1px solid #e5e5df; border-radius:4px; padding:16px; height:100%;">
           <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #ecece8; padding-bottom:8px; margin-bottom:12px;">
             <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#171717;">
@@ -885,11 +897,11 @@ with tab_overview:
             Top 100 repositories sampled per technology
           </div>
         </div>
-        """, unsafe_allow_html=True)
+        """)
 
     # Section 3: Divergence Watch
     with col_m3:
-        st.markdown(f"""
+        render_html(f"""
         <div style="background:white; border:1px solid #e5e5df; border-radius:4px; padding:16px; height:100%;">
           <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #ecece8; padding-bottom:8px; margin-bottom:12px;">
             <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#171717;">
@@ -898,7 +910,6 @@ with tab_overview:
             <span style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#73736c;">Signal Disagreement</span>
           </div>
 
-          <!-- Card 1: SQL Server / DEMAND-LED -->
           <div class="divergence-card-demand">
             <div style="display:flex; justify-content:space-between; align-items:center;">
               <span style="font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:12px; color:#171717;">SQL Server</span>
@@ -912,7 +923,6 @@ with tab_overview:
             </p>
           </div>
 
-          <!-- Card 2: LangChain / HYPE-LED -->
           <div class="divergence-card-hype">
             <div style="display:flex; justify-content:space-between; align-items:center;">
               <span style="font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:12px; color:#171717;">LangChain</span>
@@ -926,7 +936,6 @@ with tab_overview:
             </p>
           </div>
 
-          <!-- Card 3: Docker / HYPE-LED -->
           <div class="divergence-card-hype">
             <div style="display:flex; justify-content:space-between; align-items:center;">
               <span style="font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:12px; color:#171717;">Docker</span>
@@ -940,7 +949,7 @@ with tab_overview:
             </p>
           </div>
         </div>
-        """, unsafe_allow_html=True)
+        """)
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -948,7 +957,7 @@ with tab_overview:
 # ════════════════════════════════════════════════════════════════════════════
 with tab_explorer:
     # Header
-    st.markdown("""
+    render_html("""
     <div style="border-bottom:1px solid #e5e5df; padding-bottom:14px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:10px;">
       <div>
         <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#73736c; margin-bottom:2px;">
@@ -962,20 +971,20 @@ with tab_explorer:
         </p>
       </div>
     </div>
-    """, unsafe_allow_html=True)
+    """)
 
-    # Filter Bar
+    # Filter Bar with explicit unique keys
     f_col1, f_col2, f_col3, f_col4 = st.columns([3, 2, 2, 1.5])
     with f_col1:
-        search_exp = st.text_input("Search", placeholder="Search technology...", label_visibility="collapsed")
+        search_exp = st.text_input("Search", placeholder="Search technology...", label_visibility="collapsed", key="exp_search_input")
     with f_col2:
         cat_options = ["all", "Languages", "Frameworks & Runtimes", "Cloud & Infrastructure", "Data & Databases", "AI & Machine Learning", "DevOps & Tooling"]
-        cat_exp = st.selectbox("Category", cat_options, format_func=lambda c: f"Category: {c.title()}" if c != "all" else "Category: All", label_visibility="collapsed")
+        cat_exp = st.selectbox("Category", cat_options, format_func=lambda c: f"Category: {c.title()}" if c != "all" else "Category: All", label_visibility="collapsed", key="exp_category_select")
     with f_col3:
         sig_options = ["all", "THRIVING", "DEMAND-LED", "HYPE-LED", "WEAK"]
-        sig_exp = st.selectbox("Signal", sig_options, format_func=lambda s: f"Signal: {s}" if s != "all" else "Signal: All", label_visibility="collapsed")
+        sig_exp = st.selectbox("Signal", sig_options, format_func=lambda s: f"Signal: {s}" if s != "all" else "Signal: All", label_visibility="collapsed", key="exp_signal_select")
     with f_col4:
-        emerging_exp = st.checkbox("Emerging only", key="exp_emerging")
+        emerging_exp = st.checkbox("Emerging only", key="exp_emerging_cb")
 
     df_filtered_exp = df_techs.copy()
     if search_exp.strip():
@@ -989,12 +998,12 @@ with tab_explorer:
         df_filtered_exp = df_filtered_exp[df_filtered_exp["is_emerging"] == True]
 
     # Showing badge
-    st.markdown(f"""
+    render_html(f"""
     <div style="display:flex; justify-content:space-between; align-items:center; margin:10px 0 8px 0; font-family:'IBM Plex Mono',monospace; font-size:11px; color:#73736c;">
       <span>Showing <strong style="color:#171717;">{len(df_filtered_exp)}</strong> of {TOTAL_TECHS} technologies</span>
       <span>Database mart: <code style="color:#171717;">fct_skill_signals</code></span>
     </div>
-    """, unsafe_allow_html=True)
+    """)
 
     # Dense Analytical Table
     table_rows = ""
@@ -1026,7 +1035,7 @@ with tab_explorer:
           <td style="text-align:right; color:#047857; font-weight:600;">+{row['job_trend_pct']}%</td>
         </tr>"""
 
-    st.markdown(f"""
+    render_html(f"""
     <div style="background:white; border:1px solid #e5e5df; border-radius:4px; overflow-x:auto;">
       <table class="dense-table">
         <thead>
@@ -1046,7 +1055,7 @@ with tab_explorer:
         </tbody>
       </table>
     </div>
-    """, unsafe_allow_html=True)
+    """)
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -1054,7 +1063,7 @@ with tab_explorer:
 # ════════════════════════════════════════════════════════════════════════════
 with tab_signalmap:
     # Header
-    st.markdown("""
+    render_html("""
     <div style="border-bottom:1px solid #e5e5df; padding-bottom:14px; margin-bottom:16px;">
       <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#73736c; margin-bottom:2px;">
         Analytical Heart • Quadrant Decomposition
@@ -1066,9 +1075,9 @@ with tab_signalmap:
         Where employer demand and developer ecosystem attention diverge. X = 5 jobs/week threshold, Y = 30 usable GitHub repositories threshold.
       </p>
     </div>
-    """, unsafe_allow_html=True)
+    """)
 
-    # View Mode Selector & Filters
+    # View Mode Selector & Filters with explicit unique keys
     sm_c1, sm_c2, sm_c3, sm_c4 = st.columns([3.5, 2.5, 2, 1.2])
     with sm_c1:
         sm_view = st.radio(
@@ -1083,21 +1092,22 @@ with tab_signalmap:
                 "WEAK": "Weak",
             }[x],
             horizontal=True,
-            label_visibility="collapsed"
+            label_visibility="collapsed",
+            key="sm_view_mode_radio"
         )
     with sm_c2:
-        sm_search = st.text_input("Highlight", placeholder="Highlight technology...", label_visibility="collapsed")
+        sm_search = st.text_input("Highlight", placeholder="Highlight technology...", label_visibility="collapsed", key="sm_highlight_search_input")
     with sm_c3:
-        sm_cat = st.selectbox("Category", ["all", "Languages", "Frameworks & Runtimes", "Cloud & Infrastructure", "Data & Databases", "AI & Machine Learning", "DevOps & Tooling"], format_func=lambda c: f"Category: {c.title()}" if c != "all" else "Category: All", label_visibility="collapsed")
+        sm_cat = st.selectbox("Category", ["all", "Languages", "Frameworks & Runtimes", "Cloud & Infrastructure", "Data & Databases", "AI & Machine Learning", "DevOps & Tooling"], format_func=lambda c: f"Category: {c.title()}" if c != "all" else "Category: All", label_visibility="collapsed", key="sm_category_select")
     with sm_c4:
         sm_emerging = st.checkbox("Emerging", key="sm_emerging_cb")
 
     if sm_view == "divergence":
-        st.markdown("""
+        render_html("""
         <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:4px; padding:10px 14px; font-size:12px; color:#1e40af; margin-bottom:14px;">
           <strong>Divergence Mode Active:</strong> Highlighting DEMAND-LED and HYPE-LED quadrants to show where employer hiring and open-source attention deviate. Thriving and Weak points are dimmed.
         </div>
-        """, unsafe_allow_html=True)
+        """)
 
     # 8 / 4 Column Layout: Scatter Left, Inspector Right
     grid_scatter, grid_inspector = st.columns([8, 4])
@@ -1127,10 +1137,10 @@ with tab_signalmap:
             default_cand = df_techs[df_techs["canonical_name"] == "LangChain"]
             inspect_tech = default_cand.iloc[0] if not default_cand.empty else df_techs.iloc[0]
 
-        # Inspector Selector Dropdown
+        # Inspector Selector Dropdown with unique key
         tech_list = df_techs["canonical_name"].tolist()
         def_idx = tech_list.index(inspect_tech["canonical_name"]) if inspect_tech["canonical_name"] in tech_list else 0
-        chosen_tech_name = st.selectbox("Inspect Technology", tech_list, index=def_idx, label_visibility="collapsed")
+        chosen_tech_name = st.selectbox("Inspect Technology", tech_list, index=def_idx, label_visibility="collapsed", key="sm_inspect_tech_select")
         
         ins = df_techs[df_techs["canonical_name"] == chosen_tech_name].iloc[0]
         
@@ -1141,7 +1151,7 @@ with tab_signalmap:
         stars_str = f"{ins['gh_median_stars']/1000:.1f}K" if ins["gh_median_stars"] >= 1000 else f"{int(ins['gh_median_stars'])}"
         act_str = f"{int(ins['gh_active_ratio']*100)}%" if ins["gh_active_ratio"] > 0 else "—"
 
-        st.markdown(f"""
+        render_html(f"""
         <div class="inspector-panel">
           <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #ecece8; padding-bottom:10px; margin-bottom:14px;">
             <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#73736c;">
@@ -1162,7 +1172,6 @@ with tab_signalmap:
             </div>
           </div>
 
-          <!-- Core Quadrant Metrics Box -->
           <div style="background:#fafaf8; border:1px solid #e8e8e2; border-radius:4px; padding:12px; margin-bottom:14px; font-family:'IBM Plex Mono',monospace; font-size:11px;">
             <div style="display:flex; justify-content:space-between; padding:3px 0;">
               <span style="color:#73736c;">Employer Demand:</span>
@@ -1186,7 +1195,6 @@ with tab_signalmap:
             </div>
           </div>
 
-          <!-- Signal Evaluation -->
           <div style="border-top:1px solid #d4d4ce; padding-top:12px; margin-bottom:14px;">
             <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; text-transform:uppercase; color:#73736c; margin-bottom:4px;">
               Quadrant Signal Evaluation
@@ -1199,7 +1207,6 @@ with tab_signalmap:
             </p>
           </div>
 
-          <!-- Archetypes Reference -->
           <div style="border-top:1px solid #ecece8; padding-top:12px; font-size:11px;">
             <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#171717; margin-bottom:6px;">
               Divergence Archetypes:
@@ -1212,14 +1219,14 @@ with tab_signalmap:
             </div>
           </div>
         </div>
-        """, unsafe_allow_html=True)
+        """)
 
 
 # ════════════════════════════════════════════════════════════════════════════
 # TAB 4: METHODOLOGY (MethodologyView.tsx)
 # ════════════════════════════════════════════════════════════════════════════
 with tab_methodology:
-    st.markdown("""
+    render_html("""
     <div style="border-bottom:1px solid #e5e5df; padding-bottom:16px; margin-bottom:24px; max-width:1000px;">
       <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#73736c; margin-bottom:4px;">
         Technical Specification &amp; Pipeline Architecture
@@ -1231,10 +1238,10 @@ with tab_methodology:
         Rigorous methodology uniting annual survey baselines, daily observed hiring demand, and monthly quality-filtered open source ecosystem snapshots.
       </p>
     </div>
-    """, unsafe_allow_html=True)
+    """)
 
     # Section 1: Three-Source Pipeline
-    st.markdown("""
+    render_html("""
     <div style="max-width:1000px; margin-bottom:28px;">
       <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #ecece8; padding-bottom:8px; margin-bottom:14px;">
         <span style="font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#171717;">
@@ -1243,11 +1250,11 @@ with tab_methodology:
         <span style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#73736c;">Orchestrated via dbt Core</span>
       </div>
     </div>
-    """, unsafe_allow_html=True)
+    """)
 
     p1, p2, p3 = st.columns(3)
     with p1:
-        st.markdown("""
+        render_html("""
         <div style="background:white; border:1px solid #e5e5df; border-radius:4px; padding:16px; height:100%;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
             <strong style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#171717;">STACK OVERFLOW</strong>
@@ -1261,9 +1268,9 @@ with tab_methodology:
             Baseline: Developer Adoption %
           </div>
         </div>
-        """, unsafe_allow_html=True)
+        """)
     with p2:
-        st.markdown("""
+        render_html("""
         <div style="background:white; border:1px solid #e5e5df; border-radius:4px; padding:16px; height:100%;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
             <strong style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#171717;">ADZUNA IT INDIA</strong>
@@ -1277,9 +1284,9 @@ with tab_methodology:
             Measure: Weekly Job Count (X-Axis)
           </div>
         </div>
-        """, unsafe_allow_html=True)
+        """)
     with p3:
-        st.markdown("""
+        render_html("""
         <div style="background:white; border:1px solid #e5e5df; border-radius:4px; padding:16px; height:100%;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
             <strong style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#171717;">GITHUB API</strong>
@@ -1293,12 +1300,12 @@ with tab_methodology:
             Measure: Usable Repositories (Y-Axis)
           </div>
         </div>
-        """, unsafe_allow_html=True)
+        """)
 
-    st.markdown("<div style='height:28px;'></div>", unsafe_allow_html=True)
+    render_html("<div style='height:28px;'></div>")
 
     # Section 2: GitHub Repository Classification Pipeline
-    st.markdown("""
+    render_html("""
     <div style="max-width:1000px; margin-bottom:28px;">
       <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #ecece8; padding-bottom:8px; margin-bottom:14px;">
         <span style="font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#171717;">
@@ -1307,8 +1314,7 @@ with tab_methodology:
         <span style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#73736c;">Top 100 Sample Pipeline</span>
       </div>
 
-      <div style="background:white; border:1px solid #e5e5df; border-radius:4px; padding:20px; space-y:16px;">
-        <!-- 6 Step Flow -->
+      <div style="background:white; border:1px solid #e5e5df; border-radius:4px; padding:20px;">
         <div style="display:grid; grid-template-columns:repeat(6, 1fr); gap:8px; text-align:center; font-family:'IBM Plex Mono',monospace; font-size:11px; margin-bottom:16px;">
           <div style="background:#f5f5f0; border:1px solid #e2e2dc; border-radius:3px; padding:8px 4px;">
             <div style="font-weight:700; color:#171717;">Step 1</div>
@@ -1336,7 +1342,6 @@ with tab_methodology:
           </div>
         </div>
 
-        <!-- Boolean Expression Black Box -->
         <div style="background:#171717; color:#fafaf8; border-radius:4px; padding:14px; font-family:'IBM Plex Mono',monospace; font-size:12px; margin-bottom:16px;">
           <div style="color:#a3a39e; font-size:10px; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:4px;">
             Formal Boolean Filter Expression (dbt transformation)
@@ -1349,7 +1354,6 @@ with tab_methodology:
           </div>
         </div>
 
-        <!-- Taxonomy Grid -->
         <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:600; text-transform:uppercase; color:#171717; margin-bottom:8px;">
           Repository Classification Taxonomy:
         </div>
@@ -1381,10 +1385,10 @@ with tab_methodology:
         </div>
       </div>
     </div>
-    """, unsafe_allow_html=True)
+    """)
 
     # Section 3: Star Semantics
-    st.markdown("""
+    render_html("""
     <div style="max-width:1000px; margin-bottom:28px;">
       <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #ecece8; padding-bottom:8px; margin-bottom:14px;">
         <span style="font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#171717;">
@@ -1416,10 +1420,10 @@ with tab_methodology:
         </div>
       </div>
     </div>
-    """, unsafe_allow_html=True)
+    """)
 
     # Section 4: Composite Signal Matrix (2x2 Grid)
-    st.markdown("""
+    render_html("""
     <div style="max-width:1000px; margin-bottom:28px;">
       <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #ecece8; padding-bottom:8px; margin-bottom:14px;">
         <span style="font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#171717;">
@@ -1435,7 +1439,6 @@ with tab_methodology:
           </div>
 
           <div style="display:grid; grid-template-columns:1fr 1fr; border:2px solid #171717; border-radius:4px; overflow:hidden;">
-            <!-- Quadrant 2: HYPE-LED -->
             <div style="background:#fffbeb; border-right:1px solid #171717; border-bottom:1px solid #171717; padding:16px;">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
                 <strong style="color:#92400e; font-size:13px;">HYPE-LED</strong>
@@ -1447,7 +1450,6 @@ with tab_methodology:
               </div>
             </div>
 
-            <!-- Quadrant 1: THRIVING -->
             <div style="background:#ecfdf5; border-bottom:1px solid #171717; padding:16px;">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
                 <strong style="color:#065f46; font-size:13px;">THRIVING</strong>
@@ -1459,7 +1461,6 @@ with tab_methodology:
               </div>
             </div>
 
-            <!-- Quadrant 3: WEAK -->
             <div style="background:#f8fafc; border-right:1px solid #171717; padding:16px;">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
                 <strong style="color:#475569; font-size:13px;">WEAK</strong>
@@ -1471,7 +1472,6 @@ with tab_methodology:
               </div>
             </div>
 
-            <!-- Quadrant 4: DEMAND-LED -->
             <div style="background:#eff6ff; padding:16px;">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
                 <strong style="color:#1e40af; font-size:13px;">DEMAND-LED</strong>
@@ -1496,10 +1496,10 @@ with tab_methodology:
         </div>
       </div>
     </div>
-    """, unsafe_allow_html=True)
+    """)
 
     # Section 5: Data Mart Schema
-    st.markdown("""
+    render_html("""
     <div style="max-width:1000px; background:#f5f5f0; border:1px solid #d4d4ce; border-radius:4px; padding:16px; font-family:'IBM Plex Mono',monospace; font-size:11px;">
       <div style="font-weight:700; color:#171717; text-transform:uppercase; margin-bottom:6px;">
         5. Data Mart Schema &amp; Temporal Transparency
@@ -1511,11 +1511,11 @@ with tab_methodology:
         <strong>Temporal Transparency:</strong> Weekly job counts represent weekly observations from Adzuna IT extractions. GitHub metrics represent the latest monthly snapshot. The UI does not imply daily historical precision for GitHub where only monthly sampling was performed.
       </p>
     </div>
-    """, unsafe_allow_html=True)
+    """)
 
 
 # ── Editorial Research Footer (App.tsx) ───────────────────────────────────────
-st.markdown(f"""
+render_html(f"""
 <div style="border-top:1px solid #e5e5df; background:#f5f5f0; padding:20px 0; margin-top:40px; font-family:'IBM Plex Mono',monospace; font-size:11px; color:#73736c;">
   <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
     <div>
@@ -1536,4 +1536,4 @@ st.markdown(f"""
     </div>
   </div>
 </div>
-""", unsafe_allow_html=True)
+""")
