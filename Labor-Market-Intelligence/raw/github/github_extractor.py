@@ -191,7 +191,7 @@ def _check_rate_limit(response: requests.Response) -> None:
     if remaining_int < RATE_LIMIT_BUFFER:
         reset_ts = response.headers.get("X-RateLimit-Reset")
         if reset_ts:
-            wait = max(0, int(reset_ts) - int(time.time())) + 5
+            wait = min(65, max(1, int(reset_ts) - int(time.time()) + 2))
         else:
             wait = RATE_LIMIT_SLEEP_SECONDS
         print(f"  [RATE LIMIT] {remaining_int} requests remaining — sleeping {wait}s")
