@@ -33,8 +33,11 @@ st.set_page_config(
 @st.cache_data(ttl=3600, show_spinner="Loading data...")
 def load_data() -> pd.DataFrame:
     """Load fct_skill_signals — local DuckDB in dev, MotherDuck in prod."""
-    # MotherDuck token from Streamlit secrets or env
-    md_token = st.secrets.get("MotherDuck_token", os.getenv("MotherDuck_token", ""))
+    # st.secrets.get() throws if secrets file is missing; use try/except
+    try:
+        md_token = st.secrets["MotherDuck_token"]
+    except Exception:
+        md_token = os.getenv("MotherDuck_token", "")
 
     if _DB_PATH.exists():
         con = duckdb.connect(str(_DB_PATH), read_only=True)
@@ -64,7 +67,10 @@ def load_data() -> pd.DataFrame:
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def load_snapshots() -> pd.DataFrame:
-    md_token = st.secrets.get("MotherDuck_token", os.getenv("MotherDuck_token", ""))
+    try:
+        md_token = st.secrets["MotherDuck_token"]
+    except Exception:
+        md_token = os.getenv("MotherDuck_token", "")
     if _DB_PATH.exists():
         con = duckdb.connect(str(_DB_PATH), read_only=True)
     elif md_token:
