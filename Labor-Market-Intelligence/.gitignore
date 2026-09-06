@@ -1,9 +1,17 @@
 # Secrets
 .env
 
+# Private / Local Documentation
+PROJECT_CONTEXT.md
+
 # DuckDB databases
 *.duckdb
 *.duckdb.wal
+**/*.duckdb*
+
+# Logs & Diagnostics
+logs-*.txt
+*.log
 
 # Python
 .venv/
