@@ -41,6 +41,22 @@ TECH_COLS = [
 ]
 
 def build_survey_parquet() -> None:
+    if SURVEY_OUT.exists() and SURVEY_OUT.stat().st_size > 0:
+        print(f"  [INFO] {SURVEY_OUT.name} already exists ({SURVEY_OUT.stat().st_size:,} bytes). Skipping build.")
+        return
+
+    if not SURVEY_CSV.exists():
+        print(f"  [INFO] {SURVEY_CSV.name} not found. Running get_data.py to download survey...")
+        get_script = BASE / "stackoverflow" / "get_data.py"
+        if get_script.exists():
+            import subprocess
+            import sys
+            subprocess.run([sys.executable, str(get_script)], check=True)
+
+    if not SURVEY_CSV.exists():
+        print(f"  [ERROR] {SURVEY_CSV.name} not found and could not be fetched.")
+        return
+
     print("Building filtered_survey.parquet...")
     df = pd.read_csv(SURVEY_CSV, usecols=lambda c: c in TECH_COLS, low_memory=False)
     # Normalise: only keep rows that have at least one tech column non-null

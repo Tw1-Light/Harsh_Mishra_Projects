@@ -69,10 +69,12 @@ jobs:
         if: steps.cache-so-survey.outputs.cache-hit != 'true' || inputs.force_so_refresh == true
         run: |
           echo "Fetching and preparing Stack Overflow Developer Survey..."
-          python raw/stackoverflow/get_data.py
+          if [ "${{ inputs.force_so_refresh }}" = "true" ]; then
+            rm -f raw/stackoverflow/filtered_survey.parquet
+          fi
           python raw/prepare_raw.py
           if [ -f raw/stackoverflow/survey_result.csv ]; then
-            rm raw/stackoverflow/survey_result.csv
+            rm -f raw/stackoverflow/survey_result.csv
           fi
 
       - name: Extract Adzuna Job Postings (Daily)
