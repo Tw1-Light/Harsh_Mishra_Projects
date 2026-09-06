@@ -7,12 +7,16 @@ from datetime import date
 import time
 
 load_dotenv()
-app_id = os.getenv("Adzuna_app_id")
-app_key = os.getenv('Adzuna_api')
+app_id = (os.getenv("Adzuna_app_id") or os.getenv("ADZUNA_APP_ID") or "").strip()
+app_key = (os.getenv("Adzuna_api") or os.getenv("ADZUNA_API") or "").strip()
+
+if not app_id or not app_key:
+    print("[WARN] Adzuna_app_id or Adzuna_api is missing or empty. Skipping daily API fetch.")
+    exit(0)
 
 today = str(date.today())
-file_path = os.path.join(os.path.dirname(__file__),f'{today}.json')
-progress_path = os.path.join(os.path.dirname(__file__),f'progess-{today}.json')
+file_path = os.path.join(os.path.dirname(__file__), f"{today}.json")
+progress_path = os.path.join(os.path.dirname(__file__), f"progess-{today}.json")
 
 
 def fetch_with_retry(url, max_retries=5, timeout=10):
@@ -62,8 +66,9 @@ if not os.path.exists(file_path):
 
         response = fetch_with_retry(endpoint)
         if response is None:
-            save_progress(data, page_no)  # explicitly persist before exiting
-            print(f'Failed on page {page_no}, progress saved. Re-run to resume.')
+            if data:
+                save_progress(data, page_no)
+            print(f'Failed on page {page_no}.')
             break
 
         try:

@@ -27,10 +27,10 @@ jobs:
 
     env:
       PROJECT_ROOT: ${{ github.workspace }}/Labor-Market-Intelligence
-      MotherDuck_token: ${{ secrets.MotherDuck_token || secrets.MOTHERDUCK_TOKEN }}
-      Adzuna_app_id: ${{ secrets.Adzuna_app_id || secrets.ADZUNA_APP_ID }}
-      Adzuna_api: ${{ secrets.Adzuna_api || secrets.ADZUNA_API }}
-      GitHub_access_token: ${{ secrets.GitHub_access_token || secrets.GITHUB_ACCESS_TOKEN || secrets.GITHUB_TOKEN }}
+      MotherDuck_token: ${{ secrets.MotherDuck_token }}
+      Adzuna_app_id: ${{ secrets.Adzuna_app_id }}
+      Adzuna_api: ${{ secrets.Adzuna_api }}
+      GitHub_access_token: ${{ secrets.GitHub_access_token }}
 
     steps:
       - name: Checkout repository
@@ -46,6 +46,17 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install dbt-core==1.11.12 dbt-duckdb==1.10.1 duckdb pandas pyarrow requests python-dotenv
+
+      - name: Verify Environment Secrets
+        run: |
+          python -c "
+          import os
+          print('Secrets Presence Check:')
+          print('  MotherDuck_token:', 'Configured' if os.getenv('MotherDuck_token') else 'MISSING')
+          print('  Adzuna_app_id:   ', 'Configured' if os.getenv('Adzuna_app_id') else 'MISSING')
+          print('  Adzuna_api:      ', 'Configured' if os.getenv('Adzuna_api') else 'MISSING')
+          print('  GitHub token:    ', 'Configured' if os.getenv('GitHub_access_token') else 'MISSING')
+          "
 
       - name: Cache Stack Overflow Survey Parquet
         id: cache-so-survey

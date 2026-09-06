@@ -66,7 +66,12 @@ def main() -> None:
             writer.writerow(["id", "created_date", "title", "location", "technologies"])
 
         for json_file in json_files:
-            if json_file == str(CSV_PATH):
+            file_name = Path(json_file).name
+            if (
+                file_name.startswith("progess-")
+                or file_name.startswith("progress-")
+                or json_file == str(CSV_PATH)
+            ):
                 continue
             with open(json_file, "r", encoding="utf-8") as f:
                 try:
@@ -75,7 +80,14 @@ def main() -> None:
                     print(f"  [WARN] Could not parse {json_file}")
                     continue
 
+            if isinstance(jobs, dict) and "data" in jobs and isinstance(jobs["data"], list):
+                jobs = jobs["data"]
+            elif not isinstance(jobs, list):
+                continue
+
             for job in jobs:
+                if not isinstance(job, dict):
+                    continue
                 job_id = str(job.get("id", ""))
                 if not job_id or job_id in existing_ids:
                     continue
