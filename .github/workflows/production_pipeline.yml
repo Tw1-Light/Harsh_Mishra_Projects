@@ -27,11 +27,10 @@ jobs:
 
     env:
       PROJECT_ROOT: ${{ github.workspace }}/Labor-Market-Intelligence
-      MotherDuck_token: ${{ secrets.MotherDuck_token }}
-      Adzuna_app_id: ${{ secrets.Adzuna_app_id }}
-      Adzuna_api: ${{ secrets.Adzuna_api }}
-      GitHub_access_token: ${{ secrets.GitHub_access_token || secrets.GITHUB_TOKEN }}
-      GITHUB_ACCESS_TOKEN: ${{ secrets.GitHub_access_token || secrets.GITHUB_TOKEN }}
+      MotherDuck_token: ${{ secrets.MotherDuck_token || secrets.MOTHERDUCK_TOKEN }}
+      Adzuna_app_id: ${{ secrets.Adzuna_app_id || secrets.ADZUNA_APP_ID }}
+      Adzuna_api: ${{ secrets.Adzuna_api || secrets.ADZUNA_API }}
+      GitHub_access_token: ${{ secrets.GitHub_access_token || secrets.GITHUB_ACCESS_TOKEN || secrets.GITHUB_TOKEN }}
 
     steps:
       - name: Checkout repository

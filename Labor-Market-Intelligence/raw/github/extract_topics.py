@@ -5,8 +5,8 @@ from dotenv import load_dotenv
 # Load environment variables from .env
 load_dotenv()
 
-# Get token from .env
-token = os.getenv("GITHUB_ACCESS_TOKEN")
+# Get token from .env or environment
+token = os.getenv("GitHub_access_token") or os.getenv("GITHUB_ACCESS_TOKEN")
 
 headers = {"Authorization": f"token {token}"}
 
