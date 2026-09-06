@@ -92,14 +92,20 @@ jobs:
           python raw/adzuna/daily_data.py || true
           python raw/adzuna/build_adzuna_csv.py
 
-      - name: Extract GitHub Ecosystem Snapshots (Monthly or First Run)
+      - name: Sync or Extract GitHub Snapshots
         run: |
           DAY=$(date +%d)
-          if [ "$DAY" = "01" ] || [ "${{ inputs.force_github_refresh }}" = "true" ] || [ ! -f raw/github/all_repos.parquet ] || [ ! -f raw/github/all_snapshots.parquet ]; then
-            echo "Executing GitHub snapshot extraction..."
+          if [ "${{ inputs.force_github_refresh }}" = "true" ] || [ "$DAY" = "01" ]; then
+            echo "Monthly refresh triggered. Running GitHub extractor..."
             python raw/github/github_extractor.py
           else
-            echo "GitHub parquets already exist. Skipping extraction."
+            echo "Checking MotherDuck for existing full GitHub dataset..."
+            if python scripts/sync_warehouse_cache.py; then
+              echo "Reusing existing full dataset from MotherDuck. Skipped GitHub API extraction."
+            else
+              echo "MotherDuck has incomplete or missing GitHub data. Running full extractor..."
+              python raw/github/github_extractor.py
+            fi
           fi
 
       - name: Consolidate Raw Parquet Datasets
