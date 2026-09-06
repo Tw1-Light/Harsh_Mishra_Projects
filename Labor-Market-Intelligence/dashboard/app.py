@@ -187,57 +187,84 @@ code {
     border: 1px solid #e2e2dc !important;
 }
 
-/* Navigation Tabs: Always crisp & visible */
-div[data-baseweb="tab-list"] {
-    background-color: #fbfbfa !important;
-    border-bottom: 1px solid #e5e5df !important;
-    gap: 6px !important;
-    padding: 0 !important;
+/* Navigation Tabs: Segmented Control Bar with High Contrast & Always-Visible Page Names */
+div[data-testid="stTabs"] {
     margin-top: 4px !important;
     margin-bottom: 1.5rem !important;
 }
-button[data-baseweb="tab"] {
-    background: transparent !important;
-    border: none !important;
-    border-radius: 4px 4px 0 0 !important;
-    padding: 10px 18px !important;
-    cursor: pointer !important;
-    opacity: 1 !important;
-    transition: all 0.15s ease !important;
-}
-button[data-baseweb="tab"] p,
-button[data-baseweb="tab"] span,
-button[data-baseweb="tab"] div,
-button[data-baseweb="tab"] {
-    font-family: 'Plus Jakarta Sans', sans-serif !important;
-    font-size: 13px !important;
-    font-weight: 500 !important;
-    color: #5a5a54 !important;
-    letter-spacing: 0.02em !important;
-}
-button[data-baseweb="tab"]:hover,
-button[data-baseweb="tab"]:hover p,
-button[data-baseweb="tab"]:hover span,
-button[data-baseweb="tab"]:hover div {
-    color: #171717 !important;
-    background-color: #f5f5f0 !important;
-}
-button[data-baseweb="tab"][aria-selected="true"] {
-    background-color: #f0f0eb !important;
-    border-bottom: 2px solid #171717 !important;
-}
-button[data-baseweb="tab"][aria-selected="true"] p,
-button[data-baseweb="tab"][aria-selected="true"] span,
-button[data-baseweb="tab"][aria-selected="true"] div {
-    color: #171717 !important;
-    font-weight: 700 !important;
-}
-div[data-baseweb="tab-highlight"] {
-    background-color: #171717 !important;
-    height: 2px !important;
+div[data-testid="stTabs"] div[data-baseweb="tab-list"],
+div[data-baseweb="tab-list"] {
+    background-color: #f4f4f0 !important;
+    border: 1px solid #e2e2dc !important;
+    border-radius: 6px !important;
+    padding: 4px !important;
+    gap: 4px !important;
+    display: inline-flex !important;
+    width: auto !important;
 }
 div[data-baseweb="tab-border"] {
     display: none !important;
+}
+div[data-baseweb="tab-highlight"] {
+    display: none !important;
+}
+
+/* ALL Tab Buttons - Default (Always crisp & visible, never transparent or invisible) */
+[data-testid="stTabs"] button,
+[data-testid="stTabs"] button *,
+[data-testid="stTabs"] button p,
+[data-testid="stTabs"] button span,
+[data-testid="stTabs"] button div,
+div[data-baseweb="tab-list"] button,
+div[data-baseweb="tab-list"] button *,
+button[data-baseweb="tab"],
+button[data-baseweb="tab"] * {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: #3f3f3a !important;
+    -webkit-text-fill-color: #3f3f3a !important;
+    letter-spacing: 0.01em !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+[data-testid="stTabs"] button,
+div[data-baseweb="tab-list"] button,
+button[data-baseweb="tab"] {
+    background-color: transparent !important;
+    border: 1px solid transparent !important;
+    border-radius: 4px !important;
+    padding: 8px 18px !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+}
+
+/* Tab Hover */
+[data-testid="stTabs"] button:hover,
+[data-testid="stTabs"] button:hover *,
+div[data-baseweb="tab-list"] button:hover,
+div[data-baseweb="tab-list"] button:hover *,
+button[data-baseweb="tab"]:hover,
+button[data-baseweb="tab"]:hover * {
+    color: #171717 !important;
+    -webkit-text-fill-color: #171717 !important;
+    background-color: #e5e5df !important;
+}
+
+/* Active Selected Tab */
+[data-testid="stTabs"] button[aria-selected="true"],
+[data-testid="stTabs"] button[aria-selected="true"] *,
+div[data-baseweb="tab-list"] button[aria-selected="true"],
+div[data-baseweb="tab-list"] button[aria-selected="true"] *,
+button[data-baseweb="tab"][aria-selected="true"],
+button[data-baseweb="tab"][aria-selected="true"] * {
+    color: #171717 !important;
+    -webkit-text-fill-color: #171717 !important;
+    font-weight: 700 !important;
+    background-color: #ffffff !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+    border: 1px solid #d4d4ce !important;
 }
 
 /* Radio Selector Pills: Dark text on light background (Never white on white) */
@@ -269,14 +296,20 @@ div[data-testid="stRadio"] label:hover span {
     color: #000000 !important;
 }
 
-/* Form Controls */
-input[type="text"], select, .stSelectbox > div > div {
+/* Form Controls & Dropdowns */
+input[type="text"], select, .stSelectbox > div > div, div[data-baseweb="select"] {
     background-color: #fafaf8 !important;
     border: 1px solid #d4d4ce !important;
     border-radius: 4px !important;
     font-family: 'IBM Plex Mono', monospace !important;
     font-size: 12px !important;
     color: #171717 !important;
+}
+div[data-baseweb="select"] *,
+div[data-baseweb="popover"] *,
+div[data-baseweb="menu"] * {
+    color: #171717 !important;
+    -webkit-text-fill-color: #171717 !important;
 }
 input[type="text"]:focus {
     border-color: #171717 !important;
@@ -394,7 +427,7 @@ def extract_so_year() -> str:
     return "2025"
 
 
-@st.cache_data(ttl=3600, show_spinner="Connecting to MotherDuck data marts...")
+@st.cache_data(ttl=3600, show_spinner="Connecting to intelligence data warehouse...")
 def load_all_data():
     try:
         md_token = st.secrets["MotherDuck_token"]
@@ -1076,7 +1109,6 @@ with tab_explorer:
     render_html(f"""
     <div style="display:flex; justify-content:space-between; align-items:center; margin:10px 0 8px 0; font-family:'IBM Plex Mono',monospace; font-size:11px; color:#73736c;">
       <span>Showing <strong style="color:#171717;">{len(df_filtered_exp)}</strong> of {TOTAL_TECHS} technologies</span>
-      <span>Database mart: <code style="background:#f0f0eb; color:#171717; border:1px solid #e2e2dc; padding:2px 6px; border-radius:3px;">fct_skill_signals</code></span>
     </div>
     """)
 
@@ -1573,42 +1605,15 @@ with tab_methodology:
     </div>
     """)
 
-    # Section 5: Data Mart Schema
+    # Section 5: Temporal Transparency
     render_html("""
     <div style="max-width:1000px; background:#f5f5f0; border:1px solid #d4d4ce; border-radius:4px; padding:16px; font-family:'IBM Plex Mono',monospace; font-size:11px;">
       <div style="font-weight:700; color:#171717; text-transform:uppercase; margin-bottom:6px;">
-        5. Data Mart Schema &amp; Temporal Transparency
+        5. Temporal Transparency
       </div>
-      <p style="color:#575752; font-family:'Plus Jakarta Sans',sans-serif; margin:0 0 8px 0; line-height:1.6;">
-        The dashboard connects directly to the core dbt marts <code style="background:#f0f0eb; color:#171717; border:1px solid #e2e2dc; padding:2px 6px; border-radius:3px;">main_marts.fct_skill_signals</code> and <code style="background:#f0f0eb; color:#171717; border:1px solid #e2e2dc; padding:2px 6px; border-radius:3px;">main_marts.dim_technology</code>.
-      </p>
       <p style="color:#575752; font-family:'Plus Jakarta Sans',sans-serif; margin:0; line-height:1.6;">
-        <strong>Temporal Transparency:</strong> Weekly job counts represent weekly observations from Adzuna IT extractions. GitHub metrics represent the latest monthly snapshot. The UI does not imply daily historical precision for GitHub where only monthly sampling was performed.
+        <strong>Weekly Job Counts:</strong> Weekly observations from Adzuna IT extractions.<br>
+        <strong>GitHub Metrics:</strong> Latest monthly snapshot. The analytical view reflects current commercial requisitions alongside open source ecosystem activity without implying daily historical precision for repository sampling.
       </p>
     </div>
     """)
-
-
-# ── Editorial Research Footer (App.tsx) ───────────────────────────────────────
-render_html(f"""
-<div style="border-top:1px solid #e5e5df; background:#f5f5f0; padding:20px 0; margin-top:40px; font-family:'IBM Plex Mono',monospace; font-size:11px; color:#73736c;">
-  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
-    <div>
-      <div style="font-weight:600; color:#171717; margin-bottom:2px;">
-        Labor Market Intelligence &bull; Analytical Research Specification
-      </div>
-      <div style="font-size:11px; color:#85857e;">
-        Data Marts: <code style="background:#f0f0eb; color:#171717; border:1px solid #e2e2dc; padding:2px 6px; border-radius:3px;">fct_skill_signals</code> &bull; <code style="background:#f0f0eb; color:#171717; border:1px solid #e2e2dc; padding:2px 6px; border-radius:3px;">dim_technology</code> &bull; <code style="background:#f0f0eb; color:#171717; border:1px solid #e2e2dc; padding:2px 6px; border-radius:3px;">fct_github_snapshots</code>
-      </div>
-    </div>
-
-    <div style="display:flex; align-items:center; gap:16px; font-size:11px; flex-wrap:wrap;">
-      <span>Adzuna India IT Requisitions: <strong style="color:#171717;">{ADZUNA_DATE}</strong></span>
-      <span>&bull;</span>
-      <span>GitHub Snapshot: <strong style="color:#171717;">{GITHUB_DATE}</strong></span>
-      <span>&bull;</span>
-      <span>Stack Overflow: <strong style="color:#171717;">{SO_YEAR}</strong></span>
-    </div>
-  </div>
-</div>
-""")
